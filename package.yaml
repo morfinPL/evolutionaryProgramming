@@ -1,4 +1,4 @@
-name: OE
+name: EP
 version: 1.0.0.0
 author: "***REMOVED***"
 maintainer: "***REMOVED***"
@@ -32,4 +32,4 @@ executables:
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
-      - OE
+      - EP

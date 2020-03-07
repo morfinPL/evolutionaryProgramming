@@ -3,4 +3,5 @@
 ## Requirements
 
 - stack,
-- gnuplot.
+- gnuplot,
+- Windows.
