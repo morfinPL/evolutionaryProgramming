@@ -19,6 +19,8 @@ description: Please see the README.
 dependencies:
   - base
   - process
+  - random
+  - split
 
 library:
   source-dirs: src
@@ -31,5 +33,6 @@ executables:
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
+      - -main-is Task1
     dependencies:
       - EP
