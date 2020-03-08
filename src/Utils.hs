@@ -2,7 +2,9 @@ module Utils where
 
 import qualified System.Process (rawSystem)
 import qualified System.Random (StdGen, randomRs)
+import qualified Data.List (length)
 import qualified Data.List.Split (chunksOf)
+import qualified Data.Bool(bool)
 
 plot :: String -> Integer -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> IO ()
 plot functionString samples planeLevel minX maxX minY maxY solutionX  solutionY solutionZ = do
@@ -30,3 +32,26 @@ generatePopulation populationSize numberOfFeatures generator = Data.List.Split.c
                                                                (System.Random.randomRs (0 :: Integer, 1 :: Integer)
                                                                generator)))
                                                                where booleaner x = x == 1
+
+
+bin2dec :: (Foldable f, Integral i) => f Bool -> i
+bin2dec = foldl (\a -> (+) (2*a) . Data.Bool.bool 0 1) 0
+
+integerToDouble :: Int -> Integer -> Double
+integerToDouble power x = (/) (fromIntegral x) (fromIntegral (2^power -1))
+
+individualToPoint :: Int -> [Bool] -> [Double]
+individualToPoint dims individual = do
+                                    let power = div (length individual) dims
+                                    let coordinatesBooleans = Data.List.Split.chunksOf power individual
+                                    let mappingFunction = integerToDouble power
+                                    map (mappingFunction . bin2dec) coordinatesBooleans
+
+scale :: (Double, Double) -> Int -> [Double] -> [Double]
+scale range coordinate list = do
+                              let notScaledLeft = take coordinate list
+                              let notScaledRight = drop (coordinate+1) list
+                              let scaledElem = (list !! coordinate) * (snd range -fst range) + fst range
+                              notScaledLeft ++ [scaledElem] ++ notScaledRight
+
+
