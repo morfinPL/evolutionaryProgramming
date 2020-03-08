@@ -20,9 +20,10 @@ pointsToCircles points = do
                          let strings = map pointToCircle points
                          concat strings
 
-plot :: String -> Integer -> Double -> (Double, Double) -> (Double, Double) -> [[Double]] -> IO ()
-plot functionString samples planeLevel rangeX rangeY points = do
-    let args = ["set grid;",
+plot :: String -> String -> Integer -> Double -> (Double, Double) -> (Double, Double) -> [[Double]] -> IO ()
+plot title functionString samples planeLevel rangeX rangeY points = do
+    let args = ["set title \"" ++ title ++ "\";",
+                "set grid;",
                 "set pm3d;",
                 "set palette rgb 33,13,10;",
                 pointsToCircles points,

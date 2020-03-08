@@ -22,4 +22,4 @@ main = do
        if populationSize * numberOfFeatures <= 100
            then putStrLn ("Initial population: " ++ show population ++ "\n" ++ show populationPoints ++ "\n" ++ show populationScaledXPoints ++ "\n" ++ show populationScaledPoints)
        else putStrLn "Initial population is too big to be displayed."
-       Utils.plot Objectives.firstFunctionString 50 (-25) (-7.5, 7.5) (-7.5, 7.5) computedPoints
+       Utils.plot "Initial population" Objectives.firstFunctionString 50 (-25) (-7.5, 7.5) (-7.5, 7.5) computedPoints
