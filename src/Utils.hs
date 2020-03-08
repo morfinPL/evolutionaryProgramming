@@ -6,21 +6,30 @@ import qualified Data.List (length)
 import qualified Data.List.Split (chunksOf)
 import qualified Data.Bool(bool)
 
-plot :: String -> Integer -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> Double -> IO ()
-plot functionString samples planeLevel minX maxX minY maxY solutionX  solutionY solutionZ = do
+pointToCircle :: [Double] -> String
+pointToCircle point = head ["set object circle at first " ++
+                            show (head point) ++ "," ++
+                            show (point !! 1) ++ "," ++
+                            show (point !! 2) ++ " " ++
+                            "radius char 0.5 fc rgb '#FF0000' " ++
+                            "fs solid border lc rgb '#FF0000' lw 5;"]
+
+
+pointsToCircles :: [[Double]] -> String
+pointsToCircles points = do
+                         let strings = map pointToCircle points
+                         concat strings
+
+plot :: String -> Integer -> Double -> (Double, Double) -> (Double, Double) -> [[Double]] -> IO ()
+plot functionString samples planeLevel rangeX rangeY points = do
     let args = ["set grid;",
                 "set pm3d;",
                 "set palette rgb 33,13,10;",
-                "set object circle at first " ++
-                show solutionX ++ "," ++
-                show solutionY ++ "," ++
-                show solutionZ ++ " " ++
-                "radius char 0.5 fc rgb '#FF0000' " ++
-                "fs solid border lc rgb '#FF0000' lw 5;",
+                pointsToCircles points,
                 "set isosample " ++ show samples ++ ";",
                 "set xyplane at " ++ show planeLevel ++ ";",
-                "set xrange [" ++ show minX ++ ":" ++ show maxX ++ "];",
-                "set yrange [" ++ show minY ++ ":" ++ show maxY ++ "];",
+                "set xrange [" ++ show (fst rangeX) ++ ":" ++ show (snd rangeX) ++ "];",
+                "set yrange [" ++ show (fst rangeY) ++ ":" ++ show (snd rangeY) ++ "];",
                 "splot " ++ functionString]
     System.Process.rawSystem "gnuplot" ["-persist", "-e", concat args]
     return ()
@@ -54,4 +63,9 @@ scale range coordinate list = do
                               let scaledElem = (list !! coordinate) * (snd range -fst range) + fst range
                               notScaledLeft ++ [scaledElem] ++ notScaledRight
 
-
+compute :: (Double -> Double -> Double) -> [Double] -> [Double]
+compute objectiveFunction point = do
+                                  let x = head point
+                                  let y = point !! 1
+                                  let z = objectiveFunction x y
+                                  [x, y, z]
