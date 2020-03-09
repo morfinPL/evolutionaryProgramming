@@ -5,33 +5,32 @@ import qualified System.Random (StdGen, randomRs)
 import qualified Data.List (length)
 import qualified Data.List.Split (chunksOf)
 import qualified Data.Bool(bool)
+import qualified System.IO(writeFile)
 
-pointToCircle :: [Double] -> String
-pointToCircle point = head ["set object circle at first " ++
-                            show (head point) ++ "," ++
-                            show (point !! 1) ++ "," ++
-                            show (point !! 2) ++ " " ++
-                            "radius char 0.5 fc rgb '#FF0000' " ++
-                            "fs solid border lc rgb '#FF0000' lw 5;"]
+pointToString :: [Double] -> String
+pointToString point = head [show (head point) ++ " " ++
+                            show (point !! 1) ++ " " ++
+                            show (point !! 2) ++ "\n"]
 
-
-pointsToCircles :: [[Double]] -> String
-pointsToCircles points = do
-                         let strings = map pointToCircle points
-                         concat strings
+writePointsToFile :: String -> [[Double]] -> IO ()
+writePointsToFile filename points = do
+                         let strings = map pointToString points
+                         System.IO.writeFile filename (concat strings)
 
 plot :: String -> String -> Integer -> Double -> (Double, Double) -> (Double, Double) -> [[Double]] -> IO ()
 plot title functionString samples planeLevel rangeX rangeY points = do
-    let args = ["set title \"" ++ title ++ "\";",
+    let filename = "output\\population.txt"
+    writePointsToFile filename points
+    let args = ["set title '" ++ title ++ "';",
                 "set grid;",
                 "set pm3d;",
                 "set palette rgb 33,13,10;",
-                pointsToCircles points,
                 "set isosample " ++ show samples ++ ";",
                 "set xyplane at " ++ show planeLevel ++ ";",
                 "set xrange [" ++ show (fst rangeX) ++ ":" ++ show (snd rangeX) ++ "];",
                 "set yrange [" ++ show (fst rangeY) ++ ":" ++ show (snd rangeY) ++ "];",
-                "splot " ++ functionString]
+                "splot " ++ functionString ++ " title 'Objective Function' with lines lc rgb '#000000';" ++
+                "replot '" ++ filename ++ "' using 1:2:3 title 'Population' with points pt 7 lc rgb '#FF3333';"]
     System.Process.rawSystem "gnuplot" ["-persist", "-e", concat args]
     return ()
 
