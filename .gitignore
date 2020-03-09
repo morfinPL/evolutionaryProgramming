@@ -65,4 +65,5 @@ stack*.yaml.lock
 *.code-workspace
 
 build/*
+output/*
 *.exe
