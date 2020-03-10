@@ -2,10 +2,10 @@ module Utils where
 
 import qualified System.Process (rawSystem)
 import qualified System.Random (StdGen, randomRs)
-import qualified Data.List (length)
+import qualified Data.List (length, sortBy)
 import qualified Data.List.Split (chunksOf)
-import qualified Data.Bool(bool)
-import qualified System.IO(writeFile)
+import qualified Data.Bool (bool)
+import qualified System.IO (writeFile)
 
 pointToString :: [Double] -> String
 pointToString point = head [show (head point) ++ " " ++
@@ -69,3 +69,6 @@ compute objectiveFunction point = do
                                   let y = point !! 1
                                   let z = objectiveFunction x y
                                   [x, y, z]
+
+lsort :: [[Double]] -> [[Double]]
+lsort = Data.List.sortBy (\xs ys -> compare (xs !! 2) (ys !! 2))
