@@ -1,4 +1,4 @@
-# Evolutionary programming
+# Evolutionary programming ![Haskell CI](https://github.com/morfinPL/evolutionaryProgramming/workflows/Haskell%20CI/badge.svg)
 
 ![][logo]
 
