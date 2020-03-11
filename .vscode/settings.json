@@ -1,10 +1,12 @@
 {
     "cSpell.words": [
         "booleaner",
+        "eval",
         "executables",
         "foldl",
         "gnuplot",
         "isosample",
+        "rand",
         "rtsopts",
         "splot",
         "xrange",
