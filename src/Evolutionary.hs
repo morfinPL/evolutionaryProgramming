@@ -1,7 +1,9 @@
 module Evolutionary where
 
-import qualified System.Random (StdGen, randoms)
+import qualified Control.Monad.Random (evalRand, fromList, RandomGen)
 import qualified Data.List (length, elemIndices, find)
+import qualified Data.List.Split (chunksOf)
+import qualified System.Random (StdGen, randoms)
 
 take3rdElement :: [Double] -> Double
 take3rdElement list = list !! 2
@@ -45,3 +47,21 @@ generateNewPopulationByRoulette :: System.Random.StdGen -> [[Bool]] -> [Double] 
 generateNewPopulationByRoulette generator oldPopulation roulette = do
                                                          let choices = take (length oldPopulation) (System.Random.randoms generator :: [Double])
                                                          map (indexToIndividual oldPopulation) (choicesToIndexes choices roulette)
+
+weightedList :: Control.Monad.Random.RandomGen g => g -> [(a, Rational)] -> [a]
+weightedList generator weights = Control.Monad.Random.evalRand m generator
+                                    where m = sequence . repeat . Control.Monad.Random.fromList $ weights
+
+operation :: Bool -> Bool -> Bool
+operation operation = if operation then not else id
+
+apply :: [Bool] -> [Bool] -> Int -> Bool
+apply flattenPopulation operations index  = operation (operations !! index) (flattenPopulation !! index)
+
+mutate :: System.Random.StdGen -> Rational -> Int -> [[Bool]] -> [[Bool]]
+mutate generator probability numberOfFeatures population = do
+                                          let flattenPopulation = concat population
+                                          let operations = take (length flattenPopulation) (weightedList generator [(True, probability), (False, 1 -probability)])
+                                          let indices = [0, 1.. (length flattenPopulation -1)]
+                                          Data.List.Split.chunksOf numberOfFeatures (map (apply flattenPopulation operations) indices)
+
