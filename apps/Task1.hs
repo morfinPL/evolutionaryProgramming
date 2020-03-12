@@ -27,7 +27,7 @@ main = do
            then putStrLn ("Initial population:\n" ++ show computedPoints ++ "\n" ++ show probabilities)
        else putStrLn "Population is too big to be displayed."
        let newPopulation = Evolutionary.generateNewPopulationByRoulette generator population probabilities
-       let newMutatedPopulation = Evolutionary.mutate generator (1 Data.Ratio.% 1000) numberOfFeatures newPopulation
+       let newMutatedPopulation = Evolutionary.mutate generator (1 Data.Ratio.% 1000) newPopulation
        let newPopulationPoints = map (Utils.individualToPoint 2) newMutatedPopulation
        let newPopulationScaledXPoints = map (Utils.scale (-7.5, 7.5) 0) newPopulationPoints
        let newPopulationScaledPoints = map (Utils.scale (-7.5, 7.5) 1) newPopulationScaledXPoints
