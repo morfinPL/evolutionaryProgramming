@@ -40,8 +40,9 @@ generateNewPopulationByRoulette generator oldPopulation roulette = do
                                                             where indexToIndividual oldPopulation index = oldPopulation !! index
 
 
-mutate :: System.Random.StdGen -> Rational -> Int -> [[Bool]] -> [[Bool]]
-mutate generator probability numberOfFeatures population = do
+mutate :: System.Random.StdGen -> Rational -> [[Bool]] -> [[Bool]]
+mutate generator probability population = do
+                                          let numberOfFeatures = length (head population)
                                           let flattenPopulation = concat population
                                           let operations = take (length flattenPopulation) (weightedList generator [(not, probability), (id, 1 -probability)])
                                                             where weightedList generator weights = Control.Monad.Random.evalRand m generator
