@@ -48,20 +48,13 @@ generateNewPopulationByRoulette generator oldPopulation roulette = do
                                                          let choices = take (length oldPopulation) (System.Random.randoms generator :: [Double])
                                                          map (indexToIndividual oldPopulation) (choicesToIndexes choices roulette)
 
-weightedList :: Control.Monad.Random.RandomGen g => g -> [(a, Rational)] -> [a]
-weightedList generator weights = Control.Monad.Random.evalRand m generator
-                                    where m = sequence . repeat . Control.Monad.Random.fromList $ weights
-
-operation :: Bool -> Bool -> Bool
-operation operation = if operation then not else id
-
-apply :: [Bool] -> [Bool] -> Int -> Bool
-apply flattenPopulation operations index  = operation (operations !! index) (flattenPopulation !! index)
-
 mutate :: System.Random.StdGen -> Rational -> Int -> [[Bool]] -> [[Bool]]
 mutate generator probability numberOfFeatures population = do
                                           let flattenPopulation = concat population
-                                          let operations = take (length flattenPopulation) (weightedList generator [(True, probability), (False, 1 -probability)])
-                                          let indices = [0, 1.. (length flattenPopulation -1)]
-                                          Data.List.Split.chunksOf numberOfFeatures (map (apply flattenPopulation operations) indices)
+                                          let operations = take (length flattenPopulation) (weightedList generator [(not, probability), (id, 1 -probability)])
+                                                            where weightedList generator weights = Control.Monad.Random.evalRand m generator
+                                                                                                    where m = sequence . repeat . Control.Monad.Random.fromList $ weights
+                                          let tuples = zip operations flattenPopulation
+                                          Data.List.Split.chunksOf numberOfFeatures (map apply tuples)
+                                            where apply a = (fst a) (snd a)
 
