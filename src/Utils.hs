@@ -43,9 +43,6 @@ generatePopulation populationSize numberOfFeatures generator = Data.List.Split.c
                                                                where booleaner x = x == 1
 
 
-bin2dec :: (Foldable f, Integral i) => f Bool -> i
-bin2dec = foldl (\a -> (+) (2*a) . Data.Bool.bool 0 1) 0
-
 integerToDouble :: Int -> Integer -> Double
 integerToDouble power x = (/) (fromIntegral x) (fromIntegral (2^power -1))
 
@@ -55,6 +52,7 @@ individualToPoint dims individual = do
                                     let coordinatesBooleans = Data.List.Split.chunksOf power individual
                                     let mappingFunction = integerToDouble power
                                     map (mappingFunction . bin2dec) coordinatesBooleans
+                                        where bin2dec = foldl (\a -> (+) (2*a) . Data.Bool.bool 0 1) 0
 
 scale :: (Double, Double) -> Int -> [Double] -> [Double]
 scale range coordinate list = do
