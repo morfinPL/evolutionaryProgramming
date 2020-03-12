@@ -49,4 +49,11 @@ mutate generator probability population = do
                                                                                                     where m = sequence . repeat . Control.Monad.Random.fromList $ weights
                                           let tuples = zip operations flattenPopulation
                                           Data.List.Split.chunksOf numberOfFeatures (map apply tuples)
-                                            where apply a = (fst a) (snd a)
+                                            where apply a = fst a (snd a)
+
+
+nextGeneration :: System.Random.StdGen -> Rational -> [[Bool]] -> [[Double]] -> [[Bool]]
+nextGeneration generator mutationProbability population computedPoints = do
+       let probabilities = roulette computedPoints
+       let newPopulation = generateNewPopulationByRoulette generator population probabilities
+       mutate generator mutationProbability newPopulation
