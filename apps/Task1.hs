@@ -21,17 +21,23 @@ main = do
        generator <- System.Random.getStdGen
 
 
-       putStrLn "Provide needed population size:"
+       putStrLn "Provide population size:"
        populationSizeString <- getLine
        let populationSize = read populationSizeString :: Int
-       putStrLn "Provide needed number of features:"
+       putStrLn "Provide number of features:"
        numberOfFeaturesString <- getLine
        let numberOfFeatures = read numberOfFeaturesString :: Int
+       putStrLn "Provide number of iterations:"
+       numberOfIterationsString <- getLine
+       let numberOfIterations = read numberOfIterationsString :: Int
 
 
        let population = Utils.generatePopulation populationSize numberOfFeatures generator
        let computedPoints = Utils.computePoints objectiveFunction rangeX rangeY population
        Utils.plot "Initial population" objectiveFunctionString isoPoints groundLevel rangeX rangeY computedPoints
-       let newPopulation = Evolutionary.nextGeneration generator mutationProbability crossoverProbability population computedPoints
-       let newComputedPoints = Utils.computePoints objectiveFunction rangeX rangeY newPopulation
-       Utils.plot "New population" objectiveFunctionString isoPoints groundLevel rangeX rangeY newComputedPoints
+       let iterateFunction = Evolutionary.nextGeneration generator mutationProbability crossoverProbability rangeX rangeY objectiveFunction
+       let newPopulation = iterate iterateFunction (population, computedPoints) !! (numberOfIterations -1)
+
+       putStrLn "Solution:"
+       print (head (Utils.lsort (snd newPopulation)))
+       Utils.plot "New population" objectiveFunctionString isoPoints groundLevel rangeX rangeY (snd newPopulation)

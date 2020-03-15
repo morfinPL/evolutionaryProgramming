@@ -5,6 +5,8 @@ import qualified Data.List (length, elemIndices, find)
 import qualified Data.List.Split (chunksOf)
 import qualified System.Random (StdGen, randoms, randomRs)
 
+import qualified Utils (computePoints)
+
 
 computeProbabilities :: Double -> [Double] -> [Double]
 computeProbabilities sum = map (divide sum)
@@ -78,8 +80,12 @@ crossoverPopulation generator probability population = do
                                                        concatMap (crossover generator probability) (zip pairedPopulation coordinates)
 
 
-nextGeneration :: System.Random.StdGen -> Rational -> Rational -> [[Bool]] -> [[Double]] -> [[Bool]]
-nextGeneration generator mutationProbability crossoverProbability population computedPoints = do
-       let probabilities = roulette computedPoints
-       let newPopulation = generateNewPopulationByRoulette generator population probabilities
-       crossoverPopulation generator crossoverProbability (mutate generator mutationProbability newPopulation)
+nextGeneration :: System.Random.StdGen -> Rational -> Rational -> (Double, Double) -> (Double, Double) -> (Double -> Double -> Double) -> ([[Bool]], [[Double]]) -> ([[Bool]], [[Double]])
+nextGeneration generator mutationProbability crossoverProbability rangeX rangeY objectiveFunction population = do
+       let oldPopulation = fst population
+       let oldPoints = snd population
+       let probabilities = roulette oldPoints
+       let parents = generateNewPopulationByRoulette generator oldPopulation probabilities
+       let newPopulation = crossoverPopulation generator crossoverProbability (mutate generator mutationProbability parents)
+       let newPoints = Utils.computePoints objectiveFunction rangeX rangeY newPopulation
+       (newPopulation, newPoints)
