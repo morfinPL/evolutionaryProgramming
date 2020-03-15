@@ -3,7 +3,7 @@ module Evolutionary where
 import qualified Control.Monad.Random (evalRand, fromList, RandomGen)
 import qualified Data.List (length, elemIndices, find)
 import qualified Data.List.Split (chunksOf)
-import qualified System.Random (StdGen, randoms)
+import qualified System.Random (StdGen, randoms, randomRs)
 
 
 computeProbabilities :: Double -> [Double] -> [Double]
@@ -40,20 +40,46 @@ generateNewPopulationByRoulette generator oldPopulation roulette = do
                                                             where indexToIndividual oldPopulation index = oldPopulation !! index
 
 
+weightedList :: System.Random.StdGen -> [(a, Rational)] -> [a]
+weightedList generator weights = Control.Monad.Random.evalRand m generator
+                                 where m = sequence . repeat . Control.Monad.Random.fromList $ weights
+
+
 mutate :: System.Random.StdGen -> Rational -> [[Bool]] -> [[Bool]]
 mutate generator probability population = do
                                           let numberOfFeatures = length (head population)
                                           let flattenPopulation = concat population
                                           let operations = take (length flattenPopulation) (weightedList generator [(not, probability), (id, 1 -probability)])
-                                                            where weightedList generator weights = Control.Monad.Random.evalRand m generator
-                                                                                                    where m = sequence . repeat . Control.Monad.Random.fromList $ weights
                                           let tuples = zip operations flattenPopulation
                                           Data.List.Split.chunksOf numberOfFeatures (map apply tuples)
                                             where apply a = fst a (snd a)
 
 
-nextGeneration :: System.Random.StdGen -> Rational -> [[Bool]] -> [[Double]] -> [[Bool]]
-nextGeneration generator mutationProbability population computedPoints = do
+cross :: Int -> [[Bool]] -> [[Bool]]
+cross coordinate parents = do
+                           let parentA = head parents
+                           let parentB = parents !! 1
+                           let childA = take coordinate parentA ++ drop coordinate parentB
+                           let childB = take coordinate parentB ++ drop coordinate parentA
+                           [childA, childB]
+
+crossover :: System.Random.StdGen -> Rational -> ([[Bool]], Int) -> [[Bool]]
+crossover generator probability parents = if head (weightedList generator [(True, probability), (False, 1 -probability)])
+                                            then
+                                              cross (snd parents) (fst parents)
+                                          else
+                                            fst parents
+
+
+crossoverPopulation :: System.Random.StdGen -> Rational -> [[Bool]] -> [[Bool]]
+crossoverPopulation generator probability population = do
+                                                       let pairedPopulation = Data.List.Split.chunksOf 2 population
+                                                       let coordinates = take (length population) (System.Random.randomRs (1 :: Int, length (head population) -1) generator)
+                                                       concatMap (crossover generator probability) (zip pairedPopulation coordinates)
+
+
+nextGeneration :: System.Random.StdGen -> Rational -> Rational -> [[Bool]] -> [[Double]] -> [[Bool]]
+nextGeneration generator mutationProbability crossoverProbability population computedPoints = do
        let probabilities = roulette computedPoints
        let newPopulation = generateNewPopulationByRoulette generator population probabilities
-       mutate generator mutationProbability newPopulation
+       crossoverPopulation generator crossoverProbability (mutate generator mutationProbability newPopulation)
