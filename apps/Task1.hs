@@ -17,6 +17,7 @@ main = do
        let isoPoints = 50
        let groundLevel = -25
        let mutationProbability = 1 Data.Ratio.% 1000
+       let crossoverProbability = 6 Data.Ratio.% 10
        generator <- System.Random.getStdGen
 
 
@@ -31,6 +32,6 @@ main = do
        let population = Utils.generatePopulation populationSize numberOfFeatures generator
        let computedPoints = Utils.computePoints objectiveFunction rangeX rangeY population
        Utils.plot "Initial population" objectiveFunctionString isoPoints groundLevel rangeX rangeY computedPoints
-       let newPopulation = Evolutionary.nextGeneration generator mutationProbability population computedPoints
+       let newPopulation = Evolutionary.nextGeneration generator mutationProbability crossoverProbability population computedPoints
        let newComputedPoints = Utils.computePoints objectiveFunction rangeX rangeY newPopulation
        Utils.plot "New population" objectiveFunctionString isoPoints groundLevel rangeX rangeY newComputedPoints
