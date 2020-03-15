@@ -15,14 +15,16 @@ pointToString point = head [show (head point) ++ " " ++
                             show (point !! 2) ++ "\n"]
 
 writePointsToFile :: String -> [[Double]] -> IO ()
-writePointsToFile filename points = do
-                         let strings = map pointToString points
-                         System.IO.writeFile filename (concat strings)
+writePointsToFile outputDir points = do
+                         let sortedPoints = lsort points
+                         let strings = map pointToString sortedPoints
+                         System.IO.writeFile (outputDir ++ "\\population.txt") (concat strings)
+                         System.IO.writeFile (outputDir ++ "\\best.txt") (head strings)
 
 plot :: String -> String -> Integer -> Double -> (Double, Double) -> (Double, Double) -> [[Double]] -> IO ()
 plot title functionString samples planeLevel rangeX rangeY points = do
-    let filename = "output\\population.txt"
-    writePointsToFile filename points
+    let outputDir = "output"
+    writePointsToFile outputDir points
     let args = ["set title '" ++ title ++ "';",
                 "set grid;",
                 "set pm3d;",
@@ -32,7 +34,8 @@ plot title functionString samples planeLevel rangeX rangeY points = do
                 "set xrange [" ++ show (fst rangeX) ++ ":" ++ show (snd rangeX) ++ "];",
                 "set yrange [" ++ show (fst rangeY) ++ ":" ++ show (snd rangeY) ++ "];",
                 "splot " ++ functionString ++ " title 'Objective Function' with lines lc rgb '#000000';" ++
-                "replot '" ++ filename ++ "' using 1:2:3 title 'Population' with points pt 7 lc rgb '#FF3333';"]
+                "replot '" ++ outputDir ++ "\\population.txt" ++ "' using 1:2:3 title 'Population' with points pt 7 lc rgb '#FF3333';",
+                "replot '" ++ outputDir ++ "\\best.txt" ++ "' using 1:2:3 title 'Best individual' with points pt 7 lc rgb '#00FF00';"]
     System.Process.rawSystem "gnuplot" ["-persist", "-e", concat args]
     return ()
 
