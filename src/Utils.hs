@@ -16,7 +16,7 @@ pointToString point = head [show (head point) ++ " " ++
 
 writePointsToFile :: String -> [[Double]] -> IO ()
 writePointsToFile outputDir points = do
-                         let sortedPoints = lsort points
+                         let sortedPoints = sortByObjectiveFunctionValue points
                          let strings = map pointToString sortedPoints
                          System.IO.writeFile (outputDir ++ "\\population.txt") (concat strings)
                          System.IO.writeFile (outputDir ++ "\\best.txt") (head strings)
@@ -73,8 +73,8 @@ compute objectiveFunction point = do
                                   let z = objectiveFunction x y
                                   [x, y, z]
 
-lsort :: [[Double]] -> [[Double]]
-lsort = Data.List.sortBy (\xs ys -> compare (xs !! 2) (ys !! 2))
+sortByObjectiveFunctionValue :: [[Double]] -> [[Double]]
+sortByObjectiveFunctionValue = Data.List.sortBy (\xs ys -> compare (last xs) (last ys))
 
 computePoints :: (Double -> Double -> Double) -> (Double, Double) -> (Double, Double) -> [[Bool]] -> [[Double]]
 computePoints objectiveFunction rangeX rangeY population = do
