@@ -2,6 +2,10 @@ module Task1 where
 
 import qualified System.Random
 import qualified Data.Ratio
+import Control.Exception
+import qualified Formatting
+import Formatting.Clock
+import System.Clock
 
 import qualified Evolutionary
 import qualified Objectives
@@ -34,10 +38,15 @@ main = do
 
        let population = Utils.generatePopulation populationSize numberOfFeatures generator
        let computedPoints = Utils.computePoints objectiveFunction rangeX rangeY population
+       putStrLn "Best initial guess:"
+       print (head (Utils.sortByObjectiveFunctionValue computedPoints))
        Utils.plot "Initial population" objectiveFunctionString isoPoints groundLevel rangeX rangeY computedPoints
+       start <- getTime Monotonic
        let iterateFunction = Evolutionary.nextGeneration generator mutationProbability crossoverProbability rangeX rangeY objectiveFunction
        let newPopulation = iterate iterateFunction (population, computedPoints) !! (numberOfIterations -1)
 
        putStrLn "Solution:"
-       print (head (Utils.lsort (snd newPopulation)))
-       Utils.plot "New population" objectiveFunctionString isoPoints groundLevel rangeX rangeY (snd newPopulation)
+       print (head (Utils.sortByObjectiveFunctionValue (snd newPopulation)))
+       end <- getTime Monotonic
+       Formatting.fprint timeSpecs start end
+       Utils.plot "Final population" objectiveFunctionString isoPoints groundLevel rangeX rangeY (snd newPopulation)
