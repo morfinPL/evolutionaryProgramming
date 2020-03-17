@@ -1,0 +1,6 @@
+[Task1]
+populationSize = 1024
+features = 64
+iterations = 100
+mutationProbability = 1 % 1000
+crossoverProbability = 6 % 10
