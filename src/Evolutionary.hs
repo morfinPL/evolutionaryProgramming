@@ -23,11 +23,7 @@ roulette points = do
                                     where computeDifferences max = map (subtract max)
                   let sumOfDifferences = sum differences
                   computeSumOfProbabilities (computeProbabilities sumOfDifferences differences)
-                    where computeSumOfProbabilities list = do
-                                 let indexes = [1.. (length list -1)]
-                                 let sums = map (sumToElem list) indexes
-                                            where sumToElem list a = sum (take a list)
-                                 sums ++ [1.0]
+                    where computeSumOfProbabilities list = scanl1 (+) (init list)  ++ [1.0]
 
 
 choicesToIndexes :: [Double] -> [Double] -> [Int]
@@ -60,10 +56,8 @@ mutate generator probability population = do
 cross :: Int -> [[Bool]] -> [[Bool]]
 cross coordinate parents = do
                            let parentA = head parents
-                           let parentB = parents !! 1
-                           let childA = take coordinate parentA ++ drop coordinate parentB
-                           let childB = take coordinate parentB ++ drop coordinate parentA
-                           [childA, childB]
+                           let parentB = last parents
+                           [take coordinate parentA ++ drop coordinate parentB, take coordinate parentB ++ drop coordinate parentA]
 
 crossover :: System.Random.StdGen -> Rational -> ([[Bool]], Int) -> [[Bool]]
 crossover generator probability parents = if head (weightedList generator [(True, probability), (False, 1 -probability)])
