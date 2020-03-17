@@ -19,10 +19,13 @@ description: Please see the README.
 dependencies:
   - base
   - clock
+  - either
   - formatting
   - process
   - random
   - split
+  - text
+  - config-ini
   - MonadRandom
 
 library:
@@ -39,3 +42,6 @@ executables:
       - -main-is Task1
     dependencies:
       - EP
+      - config-ini
+      - either
+      - text
