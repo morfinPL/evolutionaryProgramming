@@ -39,6 +39,7 @@ executables:
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
+      - -O3
       - -main-is Task1
     dependencies:
       - EP
