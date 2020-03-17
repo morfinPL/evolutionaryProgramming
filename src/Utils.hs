@@ -1,13 +1,12 @@
 module Utils where
 
-import qualified Objectives
-
 import qualified System.Process (rawSystem)
 import qualified System.Random (StdGen, randomRs)
 import qualified Data.List (length, sortBy)
 import qualified Data.List.Split (chunksOf)
 import qualified Data.Bool (bool)
 import qualified System.IO (writeFile)
+
 
 pointToString :: [Double] -> String
 pointToString point = head [show (head point) ++ " " ++
@@ -69,7 +68,7 @@ scalePoints range coordinate = map (scalePoint range coordinate)
 compute :: (Double -> Double -> Double) -> [Double] -> [Double]
 compute objectiveFunction point = do
                                   let x = head point
-                                  let y = point !! 1
+                                  let y = last point
                                   let z = objectiveFunction x y
                                   [x, y, z]
 
@@ -81,4 +80,4 @@ computePoints objectiveFunction rangeX rangeY population = do
                                                            let populationPoints = Utils.convertPopulationToPoints 2 population
                                                            let populationScaledXPoints = Utils.scalePoints rangeX 0 populationPoints
                                                            let populationScaledPoints = Utils.scalePoints rangeY 1 populationScaledXPoints
-                                                           map (Utils.compute Objectives.firstFunction) populationScaledPoints
+                                                           map (Utils.compute objectiveFunction) populationScaledPoints

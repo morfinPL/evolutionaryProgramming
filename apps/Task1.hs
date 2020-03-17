@@ -5,12 +5,11 @@ module Task1 where
 import qualified System.Random
 import qualified Data.Text (pack)
 import qualified Data.Ini.Config (IniParser, section, fieldOf, number, parseIniFile)
-import Data.Either (fromRight)
-import qualified Data.Ratio
-import Control.Exception
-import qualified Formatting
-import Formatting.Clock
-import System.Clock
+import qualified Data.Either (fromRight)
+import qualified Data.Ratio ((%))
+import qualified Formatting (fprint)
+import qualified Formatting.Clock (timeSpecs)
+import qualified System.Clock (getTime, Clock(Monotonic))
 
 import qualified Evolutionary
 import qualified Objectives
@@ -33,15 +32,15 @@ main = do
        putStrLn "Best initial guess:"
        print (head (Utils.sortByObjectiveFunctionValue computedPoints))
        Utils.plot "Initial population" objectiveFunctionString isoPoints groundLevel rangeX rangeY computedPoints
-       start <- getTime Monotonic
+       start <- System.Clock.getTime System.Clock.Monotonic
        let iterateFunction = Evolutionary.nextGeneration generator (mutationProbability config) (crossoverProbability config) rangeX rangeY objectiveFunction
        let newPopulation = iterate iterateFunction (population, computedPoints) !! (iterations config -1)
 
        putStrLn "Solution:"
        print (head (Utils.sortByObjectiveFunctionValue (snd newPopulation)))
-       end <- getTime Monotonic
+       end <- System.Clock.getTime System.Clock.Monotonic
        putStrLn "Processing time:"
-       Formatting.fprint timeSpecs start end
+       Formatting.fprint Formatting.Clock.timeSpecs start end
        Utils.plot "Final population" objectiveFunctionString isoPoints groundLevel rangeX rangeY (snd newPopulation)
 
 
@@ -72,7 +71,7 @@ getConfig = do
                                 putStrLn "Default config will be used!"
                 Right config -> putStrLn "Config successfully loaded!"
             let defaultConfig = Config 1024 64 1000 (1 Data.Ratio.% 1000) (6 Data.Ratio.% 10)
-            let config = fromRight defaultConfig parsingResult
+            let config = Data.Either.fromRight defaultConfig parsingResult
             putStrLn "Config:"
             print config
             return config
