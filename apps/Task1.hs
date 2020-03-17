@@ -4,7 +4,7 @@ module Task1 where
 
 import qualified System.Random
 import qualified Data.Text (pack)
-import qualified Data.Ini.Config (IniParser, section, fieldOf, number, parseIniFile)
+import qualified Data.Ini.Config (IniParser, section, fieldOf, number, string, parseIniFile)
 import qualified Data.Either (fromRight)
 import qualified Data.Ratio ((%))
 import qualified Formatting (fprint)
@@ -19,21 +19,22 @@ import qualified Utils
 main :: IO ()
 main = do
        config <- getConfig
-       let objectiveFunction = Objectives.firstFunction
-       let objectiveFunctionString = Objectives.firstFunctionString
-       let rangeX = (-7.5, 7.5)
-       let rangeY = (-7.5, 7.5)
-       let isoPoints = 50
-       let groundLevel = -25
+       let objectiveFunction = Objectives.parseObjectiveFunction (function config)
+       let functorValue = Objectives.functor objectiveFunction
+       let objectiveFunctionStringValue = Objectives.string objectiveFunction
+       let rangeXValue = Objectives.rangeX objectiveFunction
+       let rangeYValue = Objectives.rangeY objectiveFunction
+       let isoPointsValue = Objectives.isoPoints objectiveFunction
+       let groundLevelValue = Objectives.groundLevel objectiveFunction
        generator <- System.Random.getStdGen
 
        let population = Utils.generatePopulation (populationSize config) (features config) generator
-       let computedPoints = Utils.computePoints objectiveFunction rangeX rangeY population
+       let computedPoints = Utils.computePoints functorValue rangeXValue rangeYValue population
        putStrLn "Best initial guess:"
        print (head (Utils.sortByObjectiveFunctionValue computedPoints))
-       Utils.plot "Initial population" objectiveFunctionString isoPoints groundLevel rangeX rangeY computedPoints
+       Utils.plot "Initial population" objectiveFunctionStringValue isoPointsValue groundLevelValue rangeXValue rangeYValue computedPoints
        start <- System.Clock.getTime System.Clock.Monotonic
-       let iterateFunction = Evolutionary.nextGeneration generator (mutationProbability config) (crossoverProbability config) rangeX rangeY objectiveFunction
+       let iterateFunction = Evolutionary.nextGeneration generator (mutationProbability config) (crossoverProbability config) rangeXValue rangeYValue functorValue
        let newPopulation = iterate iterateFunction (population, computedPoints) !! (iterations config -1)
 
        putStrLn "Solution:"
@@ -41,26 +42,27 @@ main = do
        end <- System.Clock.getTime System.Clock.Monotonic
        putStrLn "Processing time:"
        Formatting.fprint Formatting.Clock.timeSpecs start end
-       Utils.plot "Final population" objectiveFunctionString isoPoints groundLevel rangeX rangeY (snd newPopulation)
+       Utils.plot "Final population" objectiveFunctionStringValue isoPointsValue groundLevelValue rangeXValue rangeYValue (snd newPopulation)
 
 
 data Config = Config
-  { populationSize :: Int
+  { function :: String
+  , populationSize :: Int
   , features :: Int
   , iterations :: Int
   , mutationProbability :: Rational
   , crossoverProbability :: Rational
   } deriving (Eq, Show)
 
-
 parseConfig :: Data.Ini.Config.IniParser Config
 parseConfig = Data.Ini.Config.section "Task1" $ do
+  function <- Data.Ini.Config.fieldOf "function" Data.Ini.Config.string
   populationSize <- Data.Ini.Config.fieldOf "populationSize" Data.Ini.Config.number
   features <- Data.Ini.Config.fieldOf "features" Data.Ini.Config.number
   iterations <- Data.Ini.Config.fieldOf "iterations" Data.Ini.Config.number
   mutationProbability <- Data.Ini.Config.fieldOf "mutationProbability" Data.Ini.Config.number
   crossoverProbability <- Data.Ini.Config.fieldOf "crossoverProbability" Data.Ini.Config.number
-  return (Config populationSize features iterations mutationProbability crossoverProbability)
+  return (Config function populationSize features iterations mutationProbability crossoverProbability)
 
 getConfig = do
             configFile <- readFile "config\\Task1\\config.txt"
@@ -70,8 +72,7 @@ getConfig = do
                                 putStrLn message
                                 putStrLn "Default config will be used!"
                 Right config -> putStrLn "Config successfully loaded!"
-            let defaultConfig = Config 1024 64 1000 (1 Data.Ratio.% 1000) (6 Data.Ratio.% 10)
+            let defaultConfig = Config "first" 1024 64 1000 (1 Data.Ratio.% 1000) (6 Data.Ratio.% 10)
             let config = Data.Either.fromRight defaultConfig parsingResult
-            putStrLn "Config:"
             print config
             return config
