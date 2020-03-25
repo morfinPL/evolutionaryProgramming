@@ -99,12 +99,13 @@ nextGeneration
   :: System.Random.StdGen
   -> Rational
   -> Rational
+  -> ([Bool] -> [Bool])
   -> (Double, Double)
   -> (Double, Double)
   -> (Double -> Double -> Double)
   -> ([[Bool]], [[Double]])
   -> ([[Bool]], [[Double]])
-nextGeneration generator mutationProbability crossoverProbability rangeX rangeY objectiveFunction population
+nextGeneration generator mutationProbability crossoverProbability decoding rangeX rangeY objectiveFunction population
   = do
     let oldPopulation = fst population
     let oldPoints     = snd population
@@ -115,8 +116,11 @@ nextGeneration generator mutationProbability crossoverProbability rangeX rangeY 
           generator
           crossoverProbability
           (mutate generator mutationProbability parents)
-    let newPoints =
-          Utils.computePoints objectiveFunction rangeX rangeY newPopulation
+    let newPoints = Utils.computePoints objectiveFunction
+                                        rangeX
+                                        rangeY
+                                        decoding
+                                        newPopulation
     (newPopulation, newPoints)
 
 xor :: Bool -> Bool -> Bool

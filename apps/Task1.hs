@@ -34,13 +34,19 @@ main = do
   let rangeYValue                  = Objectives.rangeY objectiveFunction
   let isoPointsValue               = Objectives.isoPoints objectiveFunction
   let groundLevelValue             = Objectives.groundLevel objectiveFunction
+  let encoding                     = Evolutionary.binaryToGrayCode
+  let decoding                     = Evolutionary.grayCodeToBinary
   generator <- System.Random.getStdGen
 
   let population = Utils.generatePopulation (populationSize config)
                                             (features config)
                                             generator
-  let computedPoints =
-        Utils.computePoints functorValue rangeXValue rangeYValue population
+                                            encoding
+  let computedPoints = Utils.computePoints functorValue
+                                           rangeXValue
+                                           rangeYValue
+                                           decoding
+                                           population
   putStrLn "Best initial guess:"
   print (head (Utils.sortByObjectiveFunctionValue computedPoints))
   Utils.plot "Initial population"
@@ -55,6 +61,7 @@ main = do
         generator
         (mutationProbability config)
         (crossoverProbability config)
+        decoding
         rangeXValue
         rangeYValue
         functorValue
