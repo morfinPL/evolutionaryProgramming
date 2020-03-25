@@ -123,3 +123,6 @@ computePoints objectiveFunction rangeX rangeY population = do
   let populationScaledPoints =
         Utils.scalePoints rangeY 1 populationScaledXPoints
   map (Utils.compute objectiveFunction) populationScaledPoints
+
+codeToString :: [Bool] -> String
+codeToString = map boolToString where boolToString b = if b then '1' else '0'
