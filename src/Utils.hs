@@ -65,9 +65,11 @@ plot title functionString samples planeLevel rangeX rangeY points = do
   System.Process.rawSystem "gnuplot" ["-persist", "-e", concat args]
   return ()
 
-generatePopulation :: Int -> Int -> System.Random.StdGen -> [[Bool]]
-generatePopulation populationSize numberOfFeatures generator =
-  Data.List.Split.chunksOf
+generatePopulation
+  :: Int -> Int -> System.Random.StdGen -> ([Bool] -> [Bool]) -> [[Bool]]
+generatePopulation populationSize numberOfFeatures generator coding = map
+  coding
+  (Data.List.Split.chunksOf
     numberOfFeatures
     (map
       booleaner
@@ -75,6 +77,7 @@ generatePopulation populationSize numberOfFeatures generator =
             (System.Random.randomRs (0 :: Integer, 1 :: Integer) generator)
       )
     )
+  )
   where booleaner x = x == 1
 
 
@@ -89,8 +92,9 @@ individualToPoint dimensions individual = do
   map (mappingFunction . bin2dec) coordinatesBooleans
   where bin2dec = foldl (\a -> (+) (2 * a) . Data.Bool.bool 0 1) 0
 
-convertPopulationToPoints :: Int -> [[Bool]] -> [[Double]]
-convertPopulationToPoints dimensions = map (individualToPoint dimensions)
+convertPopulationToPoints :: Int -> ([Bool] -> [Bool]) -> [[Bool]] -> [[Double]]
+convertPopulationToPoints dimensions decoding =
+  map (individualToPoint dimensions . decoding)
 
 scalePoints :: Num a => (a, a) -> Int -> [[a]] -> [[a]]
 scalePoints range coordinate = map (scalePoint range coordinate)
@@ -115,10 +119,11 @@ computePoints
   :: (Double -> Double -> Double)
   -> (Double, Double)
   -> (Double, Double)
+  -> ([Bool] -> [Bool])
   -> [[Bool]]
   -> [[Double]]
-computePoints objectiveFunction rangeX rangeY population = do
-  let populationPoints        = Utils.convertPopulationToPoints 2 population
+computePoints objectiveFunction rangeX rangeY decoding population = do
+  let populationPoints = Utils.convertPopulationToPoints 2 decoding population
   let populationScaledXPoints = Utils.scalePoints rangeX 0 populationPoints
   let populationScaledPoints =
         Utils.scalePoints rangeY 1 populationScaledXPoints
