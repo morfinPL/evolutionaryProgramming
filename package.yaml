@@ -19,6 +19,7 @@ description: Please see the README.
 dependencies:
   - base
   - clock
+  - directory
   - either
   - formatting
   - process
