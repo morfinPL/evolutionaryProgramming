@@ -9,6 +9,7 @@ import qualified Data.List                      ( length
                                                 )
 import qualified Data.List.Split                ( chunksOf )
 import qualified Data.Bool                      ( bool )
+import qualified System.Directory               ( createDirectoryIfMissing )
 import qualified System.IO                      ( writeFile )
 
 
@@ -25,6 +26,7 @@ writePointsToFile :: String -> [[Double]] -> IO ()
 writePointsToFile outputDir points = do
   let sortedPoints = sortByObjectiveFunctionValue points
   let strings      = map pointToString sortedPoints
+  System.Directory.createDirectoryIfMissing True outputDir
   System.IO.writeFile (outputDir ++ "\\population.txt") (concat strings)
   System.IO.writeFile (outputDir ++ "\\best.txt") (head strings)
 
