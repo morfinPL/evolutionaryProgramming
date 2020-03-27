@@ -2,10 +2,11 @@
 
 module Task1 where
 
+import qualified Control.Monad
 import           System.Environment             ( getArgs )
 import qualified System.Random
-import qualified System.Directory               ( doesFileExist
-                                                , removeFile
+import qualified System.Directory               ( doesDirectoryExist
+                                                , removeDirectoryRecursive
                                                 )
 import qualified Control.Monad                  ( when )
 import qualified Data.Text                      ( pack )
@@ -45,19 +46,18 @@ main = do
   let objectiveFunction = Objectives.parseObjectiveFunction (function config)
   let functorValue = Objectives.functor objectiveFunction
   let objectiveFunctionStringValue = Objectives.string objectiveFunction
-  let rangeXValue                  = Objectives.rangeX objectiveFunction
-  let rangeYValue                  = Objectives.rangeY objectiveFunction
+  let rangeXValue = Objectives.rangeX objectiveFunction
+  let rangeYValue = Objectives.rangeY objectiveFunction
   let isoPointsValue = Objectives.isoPoints objectiveFunction
   let groundLevelValue = Objectives.groundLevel objectiveFunction
-  let encoding                     = Evolutionary.binaryToGrayCode
-  let decoding                     = Evolutionary.grayCodeToBinary
+  let encoding                     = id -- Evolutionary.binaryToGrayCode
+  let decoding                     = id -- Evolutionary.grayCodeToBinary
   let up                           = False
   let outputDirectory              = outputDir config
-  exists <- System.Directory.doesFileExist
-    (outputDirectory ++ "\\txt\\progress.txt")
+  exists <- System.Directory.doesDirectoryExist outputDirectory
   Control.Monad.when
     exists
-    (System.Directory.removeFile (outputDirectory ++ "\\txt\\progress.txt"))
+    (System.Directory.removeDirectoryRecursive outputDirectory)
   generator <- System.Random.getStdGen
 
   let population = Utils.generatePopulation (populationSize config)
@@ -89,7 +89,6 @@ main = do
              0
              outputDirectory
              computedPoints
-  start <- System.Clock.getTime System.Clock.Monotonic
   let iterateFunction = Evolutionary.nextGeneration
         generator
         (mutationProbability config)
@@ -98,34 +97,61 @@ main = do
         rangeXValue
         rangeYValue
         functorValue
-  let newPopulation =
-        iterate iterateFunction (population, computedPoints)
-          !! (iterations config - 1)
-
-  putStrLn "Solution:"
-  print (head (Utils.sortByObjectiveFunctionValue (snd newPopulation)))
+  start <- System.Clock.getTime System.Clock.Monotonic
+  let results = take (iterations config)
+                     (iterate iterateFunction (population, computedPoints))
+  putStrLn "Result:"
+  print (head (Utils.sortByObjectiveFunctionValue (snd (last results))))
   end <- System.Clock.getTime System.Clock.Monotonic
   putStrLn "Processing time:"
   Formatting.fprint Formatting.Clock.timeSpecs start end
-  Utils.plot objectiveFunctionStringValue
-             isoPointsValue
-             groundLevelValue
-             rangeXValue
-             rangeYValue
-             True
-             (iterations config)
-             outputDirectory
-             (snd newPopulation)
-  Utils.plot objectiveFunctionStringValue
-             isoPointsValue
-             groundLevelValue
-             rangeXValue
-             rangeYValue
-             False
-             (iterations config)
-             outputDirectory
-             (snd newPopulation)
+  putStrLn ""
+  putStrLn "Saving output started!"
+  let resultsWithIndexes = zip results [1, 2 .. (iterations config)]
+  Control.Monad.mapM_
+    (helper objectiveFunctionStringValue
+            isoPointsValue
+            groundLevelValue
+            rangeXValue
+            rangeYValue
+            outputDirectory
+    )
+    resultsWithIndexes
+  Utils.plot2D outputDirectory "best"
+  Utils.plot2D outputDirectory "mean"
+  putStrLn "Saving output finished!"
 
+
+
+helper
+  :: String
+  -> Integer
+  -> Double
+  -> (Double, Double)
+  -> (Double, Double)
+  -> String
+  -> (([[Bool]], [[Double]]), Int)
+  -> IO ()
+helper objectiveFunctionStringValue isoPointsValue groundLevelValue rangeXValue rangeYValue outputDirectory x
+  = do
+    Utils.plot objectiveFunctionStringValue
+               isoPointsValue
+               groundLevelValue
+               rangeXValue
+               rangeYValue
+               True
+               (snd x)
+               outputDirectory
+               (snd (fst x))
+    Utils.plot objectiveFunctionStringValue
+               isoPointsValue
+               groundLevelValue
+               rangeXValue
+               rangeYValue
+               False
+               (snd x)
+               outputDirectory
+               (snd (fst x))
 
 data Config = Config
   { outputDir :: String
