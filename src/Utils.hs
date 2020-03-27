@@ -32,40 +32,69 @@ writePointsToFile outputDir points = do
 
 plot
   :: String
-  -> String
   -> Integer
   -> Double
   -> (Double, Double)
   -> (Double, Double)
+  -> Bool
+  -> Int
+  -> String
   -> [[Double]]
   -> IO ()
-plot title functionString samples planeLevel rangeX rangeY points = do
-  let outputDir = "output"
-  writePointsToFile outputDir points
-  let
-    args =
-      [ "set title '" ++ title ++ "';"
-      , "set grid;"
-      , "set pm3d;"
-      , "set palette rgb 33,13,10;"
-      , "set isosample " ++ show samples ++ ";"
-      , "set xyplane at " ++ show planeLevel ++ ";"
-      , "set xrange [" ++ show (fst rangeX) ++ ":" ++ show (snd rangeX) ++ "];"
-      , "set yrange [" ++ show (fst rangeY) ++ ":" ++ show (snd rangeY) ++ "];"
-      , "splot "
-        ++ functionString
-        ++ " title 'Objective Function' with lines lc rgb '#000000';"
-        ++ "replot '"
-        ++ outputDir
-        ++ "\\population.txt"
-        ++ "' using 1:2:3 title 'Population' with points pt 7 lc rgb '#FF3333';"
-      , "replot '"
-        ++ outputDir
-        ++ "\\best.txt"
-        ++ "' using 1:2:3 title 'Best individual' with points pt 7 lc rgb '#00FF00';"
-      ]
-  System.Process.rawSystem "gnuplot" ["-persist", "-e", concat args]
-  return ()
+plot functionString samples planeLevel rangeX rangeY up iteration outputDir points
+  = do
+    if up then writePointsToFile outputDir points else return ()
+    let
+      args =
+        [ "set title 'Iteration " ++ show iteration ++ "';"
+        , "set grid;"
+        , "set pm3d;"
+        , "set view "
+          ++ (if up then "0, 0" else "75, 45")
+          ++ ", "
+          ++ (if up then "1.1, 1.1;" else "1, 1;")
+        , if up
+          then "set colorbox vertical user origin .02,.2;"
+          else "set colorbox horizontal user origin .1,.1  size .8,.04;"
+        , "set palette rgb 33,13,10;"
+        , "set isosample " ++ show samples ++ ";"
+        , "set xyplane at " ++ show planeLevel ++ ";"
+        , "set xrange ["
+          ++ show (fst rangeX)
+          ++ ":"
+          ++ show (snd rangeX)
+          ++ "];"
+        , "set yrange ["
+          ++ show (fst rangeY)
+          ++ ":"
+          ++ show (snd rangeY)
+          ++ "];"
+        , "splot "
+          ++ functionString
+          ++ " title 'Objective Function' with lines lc rgb '#000000', "
+          ++ "'"
+          ++ outputDir
+          ++ "\\population.txt"
+          ++ "' using 1:2:3 title 'Population' with points pt 7 lc rgb '#FF3333', "
+        , "'"
+          ++ outputDir
+          ++ "\\best.txt"
+          ++ "' using 1:2:3 title 'Best individual' with points pt 7 lc rgb '#00FF00';"
+        ]
+    let cmd =
+          [ "-e"
+          , "set terminal pngcairo size 1280,768;set output '"
+            ++ outputDir
+            ++ "\\"
+            ++ "iteration_"
+            ++ show iteration
+            ++ "_"
+            ++ (if up then "0_0" else "75_45")
+            ++ ".png';"
+            ++ concat args
+          ]
+    System.Process.rawSystem "gnuplot" cmd
+    return ()
 
 generatePopulation
   :: Int -> Int -> System.Random.StdGen -> ([Bool] -> [Bool]) -> [[Bool]]
