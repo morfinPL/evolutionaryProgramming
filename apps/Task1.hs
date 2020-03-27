@@ -28,14 +28,16 @@ main :: IO ()
 main = do
   config <- getConfig
   let objectiveFunction = Objectives.parseObjectiveFunction (function config)
-  let functorValue                 = Objectives.functor objectiveFunction
+  let functorValue = Objectives.functor objectiveFunction
   let objectiveFunctionStringValue = Objectives.string objectiveFunction
   let rangeXValue                  = Objectives.rangeX objectiveFunction
   let rangeYValue                  = Objectives.rangeY objectiveFunction
-  let isoPointsValue               = Objectives.isoPoints objectiveFunction
-  let groundLevelValue             = Objectives.groundLevel objectiveFunction
+  let isoPointsValue = Objectives.isoPoints objectiveFunction
+  let groundLevelValue = Objectives.groundLevel objectiveFunction
   let encoding                     = Evolutionary.binaryToGrayCode
   let decoding                     = Evolutionary.grayCodeToBinary
+  let up                           = False
+  let outputDir                    = "output"
   generator <- System.Random.getStdGen
 
   let population = Utils.generatePopulation (populationSize config)
@@ -49,12 +51,23 @@ main = do
                                            population
   putStrLn "Best initial guess:"
   print (head (Utils.sortByObjectiveFunctionValue computedPoints))
-  Utils.plot "Initial population"
-             objectiveFunctionStringValue
+  Utils.plot objectiveFunctionStringValue
              isoPointsValue
              groundLevelValue
              rangeXValue
              rangeYValue
+             True
+             0
+             outputDir
+             computedPoints
+  Utils.plot objectiveFunctionStringValue
+             isoPointsValue
+             groundLevelValue
+             rangeXValue
+             rangeYValue
+             False
+             0
+             outputDir
              computedPoints
   start <- System.Clock.getTime System.Clock.Monotonic
   let iterateFunction = Evolutionary.nextGeneration
@@ -74,12 +87,23 @@ main = do
   end <- System.Clock.getTime System.Clock.Monotonic
   putStrLn "Processing time:"
   Formatting.fprint Formatting.Clock.timeSpecs start end
-  Utils.plot "Final population"
-             objectiveFunctionStringValue
+  Utils.plot objectiveFunctionStringValue
              isoPointsValue
              groundLevelValue
              rangeXValue
              rangeYValue
+             True
+             (iterations config)
+             outputDir
+             (snd newPopulation)
+  Utils.plot objectiveFunctionStringValue
+             isoPointsValue
+             groundLevelValue
+             rangeXValue
+             rangeYValue
+             False
+             (iterations config)
+             outputDir
              (snd newPopulation)
 
 
