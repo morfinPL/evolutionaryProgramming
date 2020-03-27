@@ -4,13 +4,16 @@ import qualified System.Process                 ( rawSystem )
 import qualified System.Random                  ( StdGen
                                                 , randomRs
                                                 )
+import qualified Control.Monad                  ( when )
 import qualified Data.List                      ( length
                                                 , sortBy
                                                 )
 import qualified Data.List.Split                ( chunksOf )
 import qualified Data.Bool                      ( bool )
 import qualified System.Directory               ( createDirectoryIfMissing )
-import qualified System.IO                      ( writeFile )
+import qualified System.IO                      ( writeFile
+                                                , appendFile
+                                                )
 
 
 pointToString :: [Double] -> String
@@ -22,13 +25,21 @@ pointToString point =
     ++ show (point !! 2)
     ++ "\n"
 
-writePointsToFile :: String -> [[Double]] -> IO ()
-writePointsToFile outputDir points = do
+writePointsToFile :: String -> Int -> [[Double]] -> IO ()
+writePointsToFile outputDir iteration points = do
   let sortedPoints = sortByObjectiveFunctionValue points
   let strings      = map pointToString sortedPoints
-  System.Directory.createDirectoryIfMissing True outputDir
-  System.IO.writeFile (outputDir ++ "\\population.txt") (concat strings)
-  System.IO.writeFile (outputDir ++ "\\best.txt") (head strings)
+  System.Directory.createDirectoryIfMissing True (outputDir ++ "\\0_0")
+  System.Directory.createDirectoryIfMissing True (outputDir ++ "\\75_45")
+  System.Directory.createDirectoryIfMissing True (outputDir ++ "\\txt")
+  System.IO.writeFile
+    (outputDir ++ "\\txt\\population" ++ show iteration ++ ".txt")
+    (concat strings)
+  System.IO.writeFile (outputDir ++ "\\txt\\best" ++ show iteration ++ ".txt")
+                      (head strings)
+  System.IO.appendFile
+    (outputDir ++ "\\txt\\progress.txt")
+    (show iteration ++ "\t" ++ show (head sortedPoints !! 2) ++ "\n")
 
 plot
   :: String
@@ -43,7 +54,7 @@ plot
   -> IO ()
 plot functionString samples planeLevel rangeX rangeY up iteration outputDir points
   = do
-    if up then writePointsToFile outputDir points else return ()
+    Control.Monad.when up (writePointsToFile outputDir iteration points)
     let
       args =
         [ "set title 'Iteration " ++ show iteration ++ "';"
@@ -74,11 +85,15 @@ plot functionString samples planeLevel rangeX rangeY up iteration outputDir poin
           ++ " title 'Objective Function' with lines lc rgb '#000000', "
           ++ "'"
           ++ outputDir
-          ++ "\\population.txt"
+          ++ "\\txt\\population"
+          ++ show iteration
+          ++ ".txt"
           ++ "' using 1:2:3 title 'Population' with points pt 7 lc rgb '#FF3333', "
         , "'"
           ++ outputDir
-          ++ "\\best.txt"
+          ++ "\\txt\\best"
+          ++ show iteration
+          ++ ".txt"
           ++ "' using 1:2:3 title 'Best individual' with points pt 7 lc rgb '#00FF00';"
         ]
     let cmd =
@@ -86,10 +101,10 @@ plot functionString samples planeLevel rangeX rangeY up iteration outputDir poin
           , "set terminal pngcairo size 1280,768;set output '"
             ++ outputDir
             ++ "\\"
-            ++ "iteration_"
+            ++ (if up then "0_0" else "75_45")
+            ++ "\\iteration_"
             ++ show iteration
             ++ "_"
-            ++ (if up then "0_0" else "75_45")
             ++ ".png';"
             ++ concat args
           ]

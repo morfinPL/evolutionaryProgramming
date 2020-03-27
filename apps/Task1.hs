@@ -3,6 +3,10 @@
 module Task1 where
 
 import qualified System.Random
+import qualified System.Directory               ( doesFileExist
+                                                , removeFile
+                                                )
+import qualified Control.Monad                  ( when )
 import qualified Data.Text                      ( pack )
 import qualified Data.Ini.Config                ( IniParser
                                                 , section
@@ -38,6 +42,10 @@ main = do
   let decoding                     = Evolutionary.grayCodeToBinary
   let up                           = False
   let outputDir                    = "output"
+  exists <- System.Directory.doesFileExist (outputDir ++ "\\txt\\progress.txt")
+  Control.Monad.when
+    exists
+    (System.Directory.removeFile (outputDir ++ "\\txt\\progress.txt"))
   generator <- System.Random.getStdGen
 
   let population = Utils.generatePopulation (populationSize config)
