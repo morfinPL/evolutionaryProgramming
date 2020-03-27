@@ -2,6 +2,7 @@
 
 module Task1 where
 
+import           System.Environment             ( getArgs )
 import qualified System.Random
 import qualified System.Directory               ( doesFileExist
                                                 , removeFile
@@ -16,6 +17,7 @@ import qualified Data.Ini.Config                ( IniParser
                                                 , parseIniFile
                                                 )
 import qualified Data.Either                    ( fromRight )
+import qualified Data.List                      ( length )
 import qualified Data.Ratio                     ( (%) )
 import qualified Formatting                     ( fprint )
 import qualified Formatting.Clock               ( timeSpecs )
@@ -30,7 +32,16 @@ import qualified Utils
 
 main :: IO ()
 main = do
-  config <- getConfig
+  arguments <- getArgs
+  if Data.List.length arguments /= 1
+    then
+      putStrLn
+        "Application Task1 takes only one argument - configPath, if it is not passed or if you pass more arguments default config \"config\\Task1\\config.txt\" is loaded."
+    else putStrLn ("Application Task1 is loading config: " ++ head arguments)
+  let configPath = if Data.List.length arguments == 1
+        then head arguments
+        else "config\\Task1\\config.txt"
+  config <- getConfig configPath
   let objectiveFunction = Objectives.parseObjectiveFunction (function config)
   let functorValue = Objectives.functor objectiveFunction
   let objectiveFunctionStringValue = Objectives.string objectiveFunction
@@ -148,8 +159,8 @@ parseConfig = Data.Ini.Config.section "Task1" $ do
             crossoverProbability
     )
 
-getConfig = do
-  configFile <- readFile "config\\Task1\\config.txt"
+getConfig path = do
+  configFile <- readFile path
   let parsingResult =
         Data.Ini.Config.parseIniFile (Data.Text.pack configFile) parseConfig
   case parsingResult of
