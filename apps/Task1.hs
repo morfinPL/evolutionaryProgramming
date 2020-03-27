@@ -41,11 +41,12 @@ main = do
   let encoding                     = Evolutionary.binaryToGrayCode
   let decoding                     = Evolutionary.grayCodeToBinary
   let up                           = False
-  let outputDir                    = "output"
-  exists <- System.Directory.doesFileExist (outputDir ++ "\\txt\\progress.txt")
+  let outputDirectory              = outputDir config
+  exists <- System.Directory.doesFileExist
+    (outputDirectory ++ "\\txt\\progress.txt")
   Control.Monad.when
     exists
-    (System.Directory.removeFile (outputDir ++ "\\txt\\progress.txt"))
+    (System.Directory.removeFile (outputDirectory ++ "\\txt\\progress.txt"))
   generator <- System.Random.getStdGen
 
   let population = Utils.generatePopulation (populationSize config)
@@ -66,7 +67,7 @@ main = do
              rangeYValue
              True
              0
-             outputDir
+             outputDirectory
              computedPoints
   Utils.plot objectiveFunctionStringValue
              isoPointsValue
@@ -75,7 +76,7 @@ main = do
              rangeYValue
              False
              0
-             outputDir
+             outputDirectory
              computedPoints
   start <- System.Clock.getTime System.Clock.Monotonic
   let iterateFunction = Evolutionary.nextGeneration
@@ -102,7 +103,7 @@ main = do
              rangeYValue
              True
              (iterations config)
-             outputDir
+             outputDirectory
              (snd newPopulation)
   Utils.plot objectiveFunctionStringValue
              isoPointsValue
@@ -111,12 +112,13 @@ main = do
              rangeYValue
              False
              (iterations config)
-             outputDir
+             outputDirectory
              (snd newPopulation)
 
 
 data Config = Config
-  { function :: String
+  { outputDir :: String
+  ,function :: String
   , populationSize :: Int
   , features :: Int
   , iterations :: Int
@@ -126,6 +128,7 @@ data Config = Config
 
 parseConfig :: Data.Ini.Config.IniParser Config
 parseConfig = Data.Ini.Config.section "Task1" $ do
+  outputDir      <- Data.Ini.Config.fieldOf "outputDir" Data.Ini.Config.string
   function       <- Data.Ini.Config.fieldOf "function" Data.Ini.Config.string
   populationSize <- Data.Ini.Config.fieldOf "populationSize"
                                             Data.Ini.Config.number
@@ -136,7 +139,8 @@ parseConfig = Data.Ini.Config.section "Task1" $ do
   crossoverProbability <- Data.Ini.Config.fieldOf "crossoverProbability"
                                                   Data.Ini.Config.number
   return
-    (Config function
+    (Config outputDir
+            function
             populationSize
             features
             iterations
@@ -153,8 +157,13 @@ getConfig = do
       putStrLn message
       putStrLn "Default config will be used!"
     Right config -> putStrLn "Config successfully loaded!"
-  let defaultConfig =
-        Config "first" 1024 64 1000 (1 Data.Ratio.% 1000) (6 Data.Ratio.% 10)
+  let defaultConfig = Config "output\\first"
+                             "first"
+                             1024
+                             64
+                             1000
+                             (1 Data.Ratio.% 1000)
+                             (6 Data.Ratio.% 10)
   let config = Data.Either.fromRight defaultConfig parsingResult
   print config
   return config

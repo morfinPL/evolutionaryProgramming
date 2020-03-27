@@ -26,19 +26,20 @@ pointToString point =
     ++ "\n"
 
 writePointsToFile :: String -> Int -> [[Double]] -> IO ()
-writePointsToFile outputDir iteration points = do
+writePointsToFile outputDirectory iteration points = do
   let sortedPoints = sortByObjectiveFunctionValue points
   let strings      = map pointToString sortedPoints
-  System.Directory.createDirectoryIfMissing True (outputDir ++ "\\0_0")
-  System.Directory.createDirectoryIfMissing True (outputDir ++ "\\75_45")
-  System.Directory.createDirectoryIfMissing True (outputDir ++ "\\txt")
+  System.Directory.createDirectoryIfMissing True (outputDirectory ++ "\\0_0")
+  System.Directory.createDirectoryIfMissing True (outputDirectory ++ "\\75_45")
+  System.Directory.createDirectoryIfMissing True (outputDirectory ++ "\\txt")
   System.IO.writeFile
-    (outputDir ++ "\\txt\\population" ++ show iteration ++ ".txt")
+    (outputDirectory ++ "\\txt\\population" ++ show iteration ++ ".txt")
     (concat strings)
-  System.IO.writeFile (outputDir ++ "\\txt\\best" ++ show iteration ++ ".txt")
-                      (head strings)
+  System.IO.writeFile
+    (outputDirectory ++ "\\txt\\best" ++ show iteration ++ ".txt")
+    (head strings)
   System.IO.appendFile
-    (outputDir ++ "\\txt\\progress.txt")
+    (outputDirectory ++ "\\txt\\progress.txt")
     (show iteration ++ "\t" ++ show (head sortedPoints !! 2) ++ "\n")
 
 plot
@@ -52,9 +53,9 @@ plot
   -> String
   -> [[Double]]
   -> IO ()
-plot functionString samples planeLevel rangeX rangeY up iteration outputDir points
+plot functionString samples planeLevel rangeX rangeY up iteration outputDirectory points
   = do
-    Control.Monad.when up (writePointsToFile outputDir iteration points)
+    Control.Monad.when up (writePointsToFile outputDirectory iteration points)
     let
       args =
         [ "set title 'Iteration " ++ show iteration ++ "';"
@@ -84,13 +85,13 @@ plot functionString samples planeLevel rangeX rangeY up iteration outputDir poin
           ++ functionString
           ++ " title 'Objective Function' with lines lc rgb '#000000', "
           ++ "'"
-          ++ outputDir
+          ++ outputDirectory
           ++ "\\txt\\population"
           ++ show iteration
           ++ ".txt"
           ++ "' using 1:2:3 title 'Population' with points pt 7 lc rgb '#FF3333', "
         , "'"
-          ++ outputDir
+          ++ outputDirectory
           ++ "\\txt\\best"
           ++ show iteration
           ++ ".txt"
@@ -99,7 +100,7 @@ plot functionString samples planeLevel rangeX rangeY up iteration outputDir poin
     let cmd =
           [ "-e"
           , "set terminal pngcairo size 1280,768;set output '"
-            ++ outputDir
+            ++ outputDirectory
             ++ "\\"
             ++ (if up then "0_0" else "75_45")
             ++ "\\iteration_"
