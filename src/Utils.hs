@@ -28,6 +28,8 @@ pointToString point =
 writePointsToFile :: String -> Int -> [[Double]] -> IO ()
 writePointsToFile outputDirectory iteration points = do
   let sortedPoints = sortByObjectiveFunctionValue points
+  let bestValue    = last (head sortedPoints)
+  let mean = sum (map last sortedPoints) / fromIntegral (length sortedPoints)
   let strings      = map pointToString sortedPoints
   System.Directory.createDirectoryIfMissing True (outputDirectory ++ "\\0_0")
   System.Directory.createDirectoryIfMissing True (outputDirectory ++ "\\75_45")
@@ -38,9 +40,10 @@ writePointsToFile outputDirectory iteration points = do
   System.IO.writeFile
     (outputDirectory ++ "\\txt\\best" ++ show iteration ++ ".txt")
     (head strings)
-  System.IO.appendFile
-    (outputDirectory ++ "\\txt\\progress.txt")
-    (show iteration ++ "\t" ++ show (head sortedPoints !! 2) ++ "\n")
+  System.IO.appendFile (outputDirectory ++ "\\txt\\best.txt")
+                       (show iteration ++ "\t" ++ show bestValue ++ "\n")
+  System.IO.appendFile (outputDirectory ++ "\\txt\\mean.txt")
+                       (show iteration ++ "\t" ++ show mean ++ "\n")
 
 plot
   :: String
@@ -111,6 +114,30 @@ plot functionString samples planeLevel rangeX rangeY up iteration outputDirector
           ]
     System.Process.rawSystem "gnuplot" cmd
     return ()
+
+plot2D :: String -> String -> IO ()
+plot2D outputDirectory title = do
+  let args =
+        "set style line 1 lc rgb '#00AD60' lt 1 lw 2 pt 7 ps 1.5;"
+          ++ "plot '"
+          ++ outputDirectory
+          ++ "\\txt\\"
+          ++ title
+          ++ ".txt' using 1:2 title '"
+          ++ title
+          ++ "' with linespoints linestyle 1;"
+  let cmd =
+        [ "-e"
+        , "set terminal pngcairo size 1280,768;set output '"
+          ++ outputDirectory
+          ++ "\\"
+          ++ title
+          ++ ".png';"
+          ++ args
+        ]
+  System.Process.rawSystem "gnuplot" cmd
+  return ()
+
 
 generatePopulation
   :: Int -> Int -> System.Random.StdGen -> ([Bool] -> [Bool]) -> [[Bool]]
