@@ -1,4 +1,5 @@
 [Task1]
+outputDir = output\first
 function = first
 populationSize = 1024
 features = 64
