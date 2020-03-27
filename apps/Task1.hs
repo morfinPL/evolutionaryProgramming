@@ -2,13 +2,14 @@
 
 module Task1 where
 
-import qualified Control.Monad
-import           System.Environment             ( getArgs )
+import qualified System.Environment             ( getArgs )
 import qualified System.Random
 import qualified System.Directory               ( doesDirectoryExist
                                                 , removeDirectoryRecursive
                                                 )
-import qualified Control.Monad                  ( when )
+import qualified Control.Monad                  ( mapM_
+                                                , when
+                                                )
 import qualified Data.Text                      ( pack )
 import qualified Data.Ini.Config                ( IniParser
                                                 , section
@@ -33,7 +34,7 @@ import qualified Utils
 
 main :: IO ()
 main = do
-  arguments <- getArgs
+  arguments <- System.Environment.getArgs
   if Data.List.length arguments /= 1
     then
       putStrLn
