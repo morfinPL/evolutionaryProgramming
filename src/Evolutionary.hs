@@ -41,7 +41,7 @@ choicesToIndexes choices roulette = map (choiceToIndex roulette) choices
 
 
 generateNewPopulationByRoulette
-  :: System.Random.StdGen -> [[Bool]] -> [Double] -> [[Bool]]
+  :: System.Random.StdGen -> [[[Bool]]] -> [Double] -> [[[Bool]]]
 generateNewPopulationByRoulette generator oldPopulation roulette = do
   let choices = take (length oldPopulation)
                      (System.Random.randoms generator :: [Double])
@@ -54,45 +54,68 @@ weightedList generator weights = Control.Monad.Random.evalRand m generator
   where m = sequence . repeat . Control.Monad.Random.fromList $ weights
 
 
-mutate :: System.Random.StdGen -> Rational -> [[Bool]] -> [[Bool]]
+mutate :: System.Random.StdGen -> Rational -> [[[Bool]]] -> [[[Bool]]]
 mutate generator probability population = do
-  let numberOfFeatures  = length (head population)
-  let flattenPopulation = concat population
+  let dimensions               = length (head population)
+  let numberOfBitsPerDimension = length (head (head population))
+  let flattenPopulation        = concat (concat population)
   let operations = take
         (length flattenPopulation)
         (weightedList generator [(not, probability), (id, 1 - probability)])
   let tuples = zip operations flattenPopulation
-  Data.List.Split.chunksOf numberOfFeatures (map apply tuples)
+  Data.List.Split.chunksOf
+    dimensions
+    (Data.List.Split.chunksOf numberOfBitsPerDimension (map apply tuples))
   where apply a = fst a (snd a)
 
 
-cross :: Int -> [[Bool]] -> [[Bool]]
-cross coordinate parents = do
-  let parentA = head parents
-  let parentB = last parents
+cross :: (([Bool], [Bool]), Int) -> ([Bool], [Bool])
+cross tuple = do
+  let coordinate = snd tuple
+  let parents    = fst tuple
+  let parentA    = fst parents
+  let parentB    = snd parents
   let childA = take coordinate parentA ++ drop coordinate parentB
   let childB = take coordinate parentB ++ drop coordinate parentA
+  (childA, childB)
+
+crossover :: ((([Bool], [Bool]), Int), Bool) -> ([Bool], [Bool])
+crossover bigTuple =
+  if snd bigTuple then cross (fst bigTuple) else fst (fst bigTuple)
+
+coordinatesToIndividuals :: [([Bool], [Bool])] -> [[[Bool]]]
+coordinatesToIndividuals pairCoordinates = do
+  let childA = map fst pairCoordinates
+  let childB = map snd pairCoordinates
   [childA, childB]
 
-crossover :: System.Random.StdGen -> Rational -> ([[Bool]], Int) -> [[Bool]]
-crossover generator probability parents =
-  if head
-     (weightedList generator [(True, probability), (False, 1 - probability)])
-  then
-    cross (snd parents) (fst parents)
-  else
-    fst parents
-
-
-crossoverPopulation :: System.Random.StdGen -> Rational -> [[Bool]] -> [[Bool]]
+crossoverPopulation
+  :: System.Random.StdGen -> Rational -> [[[Bool]]] -> [[[Bool]]]
 crossoverPopulation generator probability population = do
-  let pairedPopulation = Data.List.Split.chunksOf 2 population
-  let coordinates = take
-        (length population)
-        (System.Random.randomRs (1 :: Int, length (head population) - 1)
-                                generator
+  let dimensions         = length (head population)
+  let pairs              = Data.List.Split.chunksOf 2 population
+  let pairsOfCoordinates = map (uncurry zip . (\x -> (head x, last x))) pairs
+  let crossoverIndicators = concatMap
+        (replicate dimensions)
+        (take
+          (length pairs)
+          (weightedList generator
+                        [(True, probability), (False, 1 - probability)]
+          )
         )
-  concatMap (crossover generator probability) (zip pairedPopulation coordinates)
+  let pointsOfCrossover = take
+        (length pairs * dimensions)
+        (System.Random.randomRs
+          (1 :: Int, length (head (head population)) - 1)
+          generator
+        )
+  let coordinatesWithPointsOfCrossoverAndIndicators = zip
+        (zip (concat pairsOfCoordinates) pointsOfCrossover)
+        crossoverIndicators
+  let crossedCoordinates =
+        map crossover coordinatesWithPointsOfCrossoverAndIndicators
+  concatMap coordinatesToIndividuals
+            (Data.List.Split.chunksOf dimensions crossedCoordinates)
 
 
 nextGeneration
@@ -103,8 +126,8 @@ nextGeneration
   -> (Double, Double)
   -> (Double, Double)
   -> (Double -> Double -> Double)
-  -> ([[Bool]], [[Double]])
-  -> ([[Bool]], [[Double]])
+  -> ([[[Bool]]], [[Double]])
+  -> ([[[Bool]]], [[Double]])
 nextGeneration generator mutationProbability crossoverProbability decoding rangeX rangeY objectiveFunction population
   = do
     let oldPopulation = fst population

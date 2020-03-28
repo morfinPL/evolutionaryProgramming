@@ -60,8 +60,8 @@ main = do
     exists
     (System.Directory.removeDirectoryRecursive outputDirectory)
   generator <- System.Random.getStdGen
-
   let population = Utils.generatePopulation (populationSize config)
+                                            2
                                             (features config)
                                             generator
                                             encoding
@@ -98,16 +98,17 @@ main = do
         rangeXValue
         rangeYValue
         functorValue
-  start <- System.Clock.getTime System.Clock.Monotonic
+  startComputing <- System.Clock.getTime System.Clock.Monotonic
   let results = take (iterations config)
                      (iterate iterateFunction (population, computedPoints))
   putStrLn "Result:"
   print (head (Utils.sortByObjectiveFunctionValue (snd (last results))))
-  end <- System.Clock.getTime System.Clock.Monotonic
+  endComputing <- System.Clock.getTime System.Clock.Monotonic
   putStrLn "Processing time:"
-  Formatting.fprint Formatting.Clock.timeSpecs start end
+  Formatting.fprint Formatting.Clock.timeSpecs startComputing endComputing
   putStrLn ""
   putStrLn "Saving output started!"
+  startSaving <- System.Clock.getTime System.Clock.Monotonic
   let resultsWithIndexes = zip results [1, 2 .. (iterations config)]
   Control.Monad.mapM_
     (helper objectiveFunctionStringValue
@@ -120,7 +121,10 @@ main = do
     resultsWithIndexes
   Utils.plot2D outputDirectory "best"
   Utils.plot2D outputDirectory "mean"
-  putStrLn "Saving output finished!"
+  endSaving <- System.Clock.getTime System.Clock.Monotonic
+  putStrLn "Saving time:"
+  Formatting.fprint Formatting.Clock.timeSpecs startSaving endSaving
+  putStrLn "\nSaving output finished!"
 
 
 
@@ -131,7 +135,7 @@ helper
   -> (Double, Double)
   -> (Double, Double)
   -> String
-  -> (([[Bool]], [[Double]]), Int)
+  -> (([[[Bool]]], [[Double]]), Int)
   -> IO ()
 helper objectiveFunctionStringValue isoPointsValue groundLevelValue rangeXValue rangeYValue outputDirectory x
   = do
