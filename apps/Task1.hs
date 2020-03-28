@@ -3,7 +3,7 @@
 module Task1 where
 
 import qualified System.Environment             ( getArgs )
-import qualified System.Random
+import qualified Random.Xorshift.Int64          ( newXorshift64 )
 import qualified System.Directory               ( doesDirectoryExist
                                                 , removeDirectoryRecursive
                                                 )
@@ -53,13 +53,12 @@ main = do
   let groundLevelValue = Objectives.groundLevel objectiveFunction
   let encoding                     = id -- Evolutionary.binaryToGrayCode
   let decoding                     = id -- Evolutionary.grayCodeToBinary
-  let up                           = False
   let outputDirectory              = outputDir config
   exists <- System.Directory.doesDirectoryExist outputDirectory
   Control.Monad.when
     exists
     (System.Directory.removeDirectoryRecursive outputDirectory)
-  generator <- System.Random.getStdGen
+  generator <- Random.Xorshift.Int64.newXorshift64
   let population = Utils.generatePopulation (populationSize config)
                                             2
                                             (features config)

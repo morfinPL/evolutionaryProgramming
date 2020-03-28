@@ -27,6 +27,7 @@ dependencies:
   - split
   - text
   - config-ini
+  - xorshift
   - MonadRandom
 
 library:
@@ -44,6 +45,7 @@ executables:
       - -main-is Task1
     dependencies:
       - EP
+      - xorshift
       - config-ini
       - either
       - text
