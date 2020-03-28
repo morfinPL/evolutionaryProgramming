@@ -2,7 +2,7 @@
 outputDir = output\first
 function = first
 populationSize = 1024
-features = 64
+features = 32
 iterations = 100
 mutationProbability = 1 % 1000
 crossoverProbability = 6 % 10

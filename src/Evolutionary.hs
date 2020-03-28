@@ -2,14 +2,13 @@ module Evolutionary where
 
 import qualified Control.Monad.Random           ( evalRand
                                                 , fromList
-                                                , RandomGen
                                                 )
 import qualified Data.List                      ( length
                                                 , elemIndices
                                                 , find
                                                 )
 import qualified Data.List.Split                ( chunksOf )
-import qualified System.Random                  ( StdGen
+import qualified System.Random                  ( RandomGen
                                                 , randoms
                                                 , randomRs
                                                 )
@@ -41,7 +40,7 @@ choicesToIndexes choices roulette = map (choiceToIndex roulette) choices
 
 
 generateNewPopulationByRoulette
-  :: System.Random.StdGen -> [[[Bool]]] -> [Double] -> [[[Bool]]]
+  :: System.Random.RandomGen g => g -> [[[Bool]]] -> [Double] -> [[[Bool]]]
 generateNewPopulationByRoulette generator oldPopulation roulette = do
   let choices = take (length oldPopulation)
                      (System.Random.randoms generator :: [Double])
@@ -49,12 +48,12 @@ generateNewPopulationByRoulette generator oldPopulation roulette = do
   where indexToIndividual oldPopulation index = oldPopulation !! index
 
 
-weightedList :: System.Random.StdGen -> [(a, Rational)] -> [a]
+weightedList :: System.Random.RandomGen g => g -> [(a, Rational)] -> [a]
 weightedList generator weights = Control.Monad.Random.evalRand m generator
   where m = sequence . repeat . Control.Monad.Random.fromList $ weights
 
 
-mutate :: System.Random.StdGen -> Rational -> [[[Bool]]] -> [[[Bool]]]
+mutate :: System.Random.RandomGen g => g -> Rational -> [[[Bool]]] -> [[[Bool]]]
 mutate generator probability population = do
   let dimensions               = length (head population)
   let numberOfBitsPerDimension = length (head (head population))
@@ -90,7 +89,7 @@ coordinatesToIndividuals pairCoordinates = do
   [childA, childB]
 
 crossoverPopulation
-  :: System.Random.StdGen -> Rational -> [[[Bool]]] -> [[[Bool]]]
+  :: System.Random.RandomGen g => g -> Rational -> [[[Bool]]] -> [[[Bool]]]
 crossoverPopulation generator probability population = do
   let dimensions         = length (head population)
   let pairs              = Data.List.Split.chunksOf 2 population
@@ -119,7 +118,8 @@ crossoverPopulation generator probability population = do
 
 
 nextGeneration
-  :: System.Random.StdGen
+  :: System.Random.RandomGen g
+  => g
   -> Rational
   -> Rational
   -> ([Bool] -> [Bool])

@@ -1,8 +1,8 @@
 module Utils where
 
 import qualified System.Process                 ( rawSystem )
-import qualified System.Random                  ( StdGen
-                                                , randomRs
+import qualified System.Random                  ( RandomGen
+                                                , randoms
                                                 )
 import qualified Control.Monad                  ( when )
 import qualified Data.List                      ( length
@@ -17,10 +17,11 @@ import qualified System.IO                      ( writeFile
 
 
 generatePopulation
-  :: Int
+  :: System.Random.RandomGen g
+  => Int
   -> Int
   -> Int
-  -> System.Random.StdGen
+  -> g
   -> ([Bool] -> [Bool])
   -> [[[Bool]]]
 generatePopulation populationSize dimensions numberOfFeaturesPerDimension generator coding
@@ -28,11 +29,8 @@ generatePopulation populationSize dimensions numberOfFeaturesPerDimension genera
     (map coding . Data.List.Split.chunksOf numberOfFeaturesPerDimension)
     (Data.List.Split.chunksOf
       (dimensions * numberOfFeaturesPerDimension)
-      (map
-        booleaner
-        (take (dimensions * numberOfFeaturesPerDimension * populationSize)
-              (System.Random.randomRs (0 :: Integer, 1 :: Integer) generator)
-        )
+      (take (dimensions * numberOfFeaturesPerDimension * populationSize)
+            (System.Random.randoms generator :: [Bool])
       )
     )
   where booleaner x = x == 1
