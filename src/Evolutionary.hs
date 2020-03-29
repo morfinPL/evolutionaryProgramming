@@ -119,24 +119,21 @@ onePointCrossover generator probability population = do
 
 
 nextGeneration
-  :: System.Random.RandomGen g
-  => g
-  -> Rational
-  -> ([Bool] -> [Bool])
+  :: ([Bool] -> [Bool])
   -> ([[[Bool]]] -> [[Double]] -> [[[Bool]]])
+  -> ([[[Bool]]] -> [[[Bool]]])
   -> ([[[Bool]]] -> [[[Bool]]])
   -> (Double, Double)
   -> (Double, Double)
   -> (Double -> Double -> Double)
   -> ([[[Bool]]], [[Double]])
   -> ([[[Bool]]], [[Double]])
-nextGeneration generator crossoverProbability decoding selection mutation rangeX rangeY objectiveFunction population
+nextGeneration decoding selection mutation crossover rangeX rangeY objectiveFunction population
   = do
     let oldPopulation = fst population
     let oldPoints     = snd population
     let parents       = selection oldPopulation oldPoints
-    let newPopulation =
-          onePointCrossover generator crossoverProbability (mutation parents)
+    let newPopulation = crossover (mutation parents)
     let newPoints = Utils.computePoints objectiveFunction
                                         rangeX
                                         rangeY
