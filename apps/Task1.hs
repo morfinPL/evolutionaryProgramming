@@ -30,6 +30,7 @@ import qualified System.Clock                   ( getTime
 import qualified Coding
 import qualified Evolutionary
 import qualified Objectives
+import qualified Selections
 import qualified Utils
 
 
@@ -55,7 +56,7 @@ main = do
   generator <- Random.Xorshift.Int64.newXorshift64
   let encoding  = id -- Coding.grayCoding
   let decoding  = id -- Coding.grayDecoding
-  let selection = Evolutionary.rouletteSelection generator
+  let selection = Selections.rouletteSelection generator
   let mutation =
         Evolutionary.flipBitMutation generator (mutationProbability config)
   let crossover =
