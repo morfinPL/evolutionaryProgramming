@@ -40,11 +40,12 @@ choicesToIndexes choices roulette = map (choiceToIndex roulette) choices
 
 
 generateNewPopulationByRoulette
-  :: System.Random.RandomGen g => g -> [[[Bool]]] -> [Double] -> [[[Bool]]]
-generateNewPopulationByRoulette generator oldPopulation roulette = do
+  :: System.Random.RandomGen g => g -> [[[Bool]]] -> [[Double]] -> [[[Bool]]]
+generateNewPopulationByRoulette generator oldPopulation oldPoints = do
+  let rouletteVal = roulette oldPoints
   let choices = take (length oldPopulation)
                      (System.Random.randoms generator :: [Double])
-  map (indexToIndividual oldPopulation) (choicesToIndexes choices roulette)
+  map (indexToIndividual oldPopulation) (choicesToIndexes choices rouletteVal)
   where indexToIndividual oldPopulation index = oldPopulation !! index
 
 
@@ -123,18 +124,17 @@ nextGeneration
   -> Rational
   -> Rational
   -> ([Bool] -> [Bool])
+  -> ([[[Bool]]] -> [[Double]] -> [[[Bool]]])
   -> (Double, Double)
   -> (Double, Double)
   -> (Double -> Double -> Double)
   -> ([[[Bool]]], [[Double]])
   -> ([[[Bool]]], [[Double]])
-nextGeneration generator mutationProbability crossoverProbability decoding rangeX rangeY objectiveFunction population
+nextGeneration generator mutationProbability crossoverProbability decoding selection rangeX rangeY objectiveFunction population
   = do
     let oldPopulation = fst population
     let oldPoints     = snd population
-    let probabilities = roulette oldPoints
-    let parents =
-          generateNewPopulationByRoulette generator oldPopulation probabilities
+    let parents       = selection oldPopulation oldPoints
     let newPopulation = crossoverPopulation
           generator
           crossoverProbability

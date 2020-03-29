@@ -193,15 +193,24 @@ plot functionString samples planeLevel rangeX rangeY up iteration outputDirector
 
 plot2D :: String -> String -> IO ()
 plot2D outputDirectory title = do
-  let args =
-        "set style line 1 lc rgb '#00AD60' lt 1 lw 2 pt 7 ps 1.5;"
-          ++ "plot '"
-          ++ outputDirectory
-          ++ "\\txt\\"
-          ++ title
-          ++ ".txt' using 1:2 title '"
-          ++ title
-          ++ "' with linespoints linestyle 1;"
+  let
+    args =
+      (if title == "mean"
+          then
+            "set title 'Mean objective function value for whole population';set xlabel 'Iteration';set ylabel 'Objective function value';"
+          else
+            "set title 'Objective function value best individual';set xlabel 'Iteration';set ylabel 'Objective function value';"
+        )
+        ++ "plot '"
+        ++ outputDirectory
+        ++ "\\txt\\"
+        ++ title
+        ++ ".txt' using 1:2 title '"
+        ++ (if title == "mean"
+             then "Mean objective function value"
+             else "Best objective function value"
+           )
+        ++ "' with linespoints lc rgb '#00AD60' lt 1 lw 2 pt 7 ps 1.5;"
   let cmd =
         [ "-e"
         , "set terminal pngcairo size 1280,768;set output '"

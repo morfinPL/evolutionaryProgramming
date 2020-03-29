@@ -45,20 +45,21 @@ main = do
         else "config\\Task1\\config.txt"
   config <- getConfig configPath
   let objectiveFunction = Objectives.parseObjectiveFunction (function config)
-  let functorValue = Objectives.functor objectiveFunction
+  let functorValue                 = Objectives.functor objectiveFunction
   let objectiveFunctionStringValue = Objectives.string objectiveFunction
-  let rangeXValue = Objectives.rangeX objectiveFunction
-  let rangeYValue = Objectives.rangeY objectiveFunction
-  let isoPointsValue = Objectives.isoPoints objectiveFunction
-  let groundLevelValue = Objectives.groundLevel objectiveFunction
-  let encoding                     = id -- Evolutionary.binaryToGrayCode
-  let decoding                     = id -- Evolutionary.grayCodeToBinary
-  let outputDirectory              = outputDir config
+  let rangeXValue                  = Objectives.rangeX objectiveFunction
+  let rangeYValue                  = Objectives.rangeY objectiveFunction
+  let isoPointsValue               = Objectives.isoPoints objectiveFunction
+  let groundLevelValue             = Objectives.groundLevel objectiveFunction
+  generator <- Random.Xorshift.Int64.newXorshift64
+  let encoding        = id -- Evolutionary.binaryToGrayCode
+  let decoding        = id -- Evolutionary.grayCodeToBinary
+  let selection = Evolutionary.generateNewPopulationByRoulette generator
+  let outputDirectory = outputDir config
   exists <- System.Directory.doesDirectoryExist outputDirectory
   Control.Monad.when
     exists
     (System.Directory.removeDirectoryRecursive outputDirectory)
-  generator <- Random.Xorshift.Int64.newXorshift64
   let population = Utils.generatePopulation (populationSize config)
                                             2
                                             (features config)
@@ -94,6 +95,7 @@ main = do
         (mutationProbability config)
         (crossoverProbability config)
         decoding
+        selection
         rangeXValue
         rangeYValue
         functorValue
