@@ -9,8 +9,8 @@ import qualified System.Random                  ( RandomGen
 import qualified Utils
 
 
-onePointCrossPair :: (([Bool], [Bool]), Int) -> ([Bool], [Bool])
-onePointCrossPair tuple = do
+onePointForPair :: (([Bool], [Bool]), Int) -> ([Bool], [Bool])
+onePointForPair tuple = do
   let coordinate = snd tuple
   let parents    = fst tuple
   let parentA    = fst parents
@@ -25,9 +25,9 @@ coordinatesToIndividuals pairCoordinates = do
   let childB = map snd pairCoordinates
   [childA, childB]
 
-onePointCrossover
+onePoint
   :: System.Random.RandomGen g => g -> Rational -> [[[Bool]]] -> [[[Bool]]]
-onePointCrossover generator probability population = do
+onePoint generator probability population = do
   let dimensions         = length (head population)
   let pairs              = Data.List.Split.chunksOf 2 population
   let pairsOfCoordinates = map (uncurry zip . (\x -> (head x, last x))) pairs
@@ -52,7 +52,7 @@ onePointCrossover generator probability population = do
   let crossedCoordinates = map crossoverIf
                                coordinatesWithPointsOfCrossoverAndIndicators       where
         crossoverIf bigTuple = if snd bigTuple
-          then onePointCrossPair (fst bigTuple)
+          then onePointForPair (fst bigTuple)
           else fst (fst bigTuple)
   concatMap coordinatesToIndividuals
             (Data.List.Split.chunksOf dimensions crossedCoordinates)

@@ -13,8 +13,8 @@ computeProbabilities :: Double -> [Double] -> [Double]
 computeProbabilities sum = map (divide sum) where divide sum elem = elem / sum
 
 
-roulette :: [[Double]] -> [Double]
-roulette points = do
+computeRouletteArray :: [[Double]] -> [Double]
+computeRouletteArray points = do
   let values = map take3rdElement points where take3rdElement list = list !! 2
   let max          = maximum values
   let increasedMax = max + abs (0.1 * max)
@@ -26,16 +26,19 @@ roulette points = do
 
 
 choicesToIndexes :: [Double] -> [Double] -> [Int]
-choicesToIndexes choices roulette = map (choiceToIndex roulette) choices
+choicesToIndexes choices rouletteArray = map (choiceToIndex rouletteArray)
+                                             choices
  where
-  choiceToIndex roulette a = head
-    (Data.List.elemIndices (Data.List.find (>= a) roulette) (map Just roulette))
+  choiceToIndex rouletteArray a = head
+    (Data.List.elemIndices (Data.List.find (>= a) rouletteArray)
+                           (map Just rouletteArray)
+    )
 
 
-rouletteSelection
+roulette
   :: System.Random.RandomGen g => g -> [[[Bool]]] -> [[Double]] -> [[[Bool]]]
-rouletteSelection generator oldPopulation oldPoints = do
-  let rouletteArray = roulette oldPoints
+roulette generator oldPopulation oldPoints = do
+  let rouletteArray = computeRouletteArray oldPoints
   let choices = take (length oldPopulation)
                      (System.Random.randoms generator :: [Double])
   map (indexToIndividual oldPopulation) (choicesToIndexes choices rouletteArray)
