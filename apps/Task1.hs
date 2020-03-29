@@ -63,7 +63,9 @@ main = do
   let selection = if sga config
         then Selections.roulette generator
         else Selections.champion generator
-  let mutation = Mutations.flipBit generator (mutationProbability config)
+  let mutation = if sga config
+        then Mutations.flipBit generator (mutationProbability config)
+        else Mutations.reverseSequence generator (mutationProbability config)
   let crossover = Crossovers.onePoint generator (crossoverProbability config)
   let outputDirectory = outputDir config
   let computePoints =
