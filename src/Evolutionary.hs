@@ -10,9 +10,5 @@ nextGeneration
   -> ([[[Bool]]], [[Double]])
 nextGeneration decoding selection mutation crossover computePoints population =
   do
-    let oldPopulation = fst population
-    let oldPoints     = snd population
-    let parents       = selection oldPopulation oldPoints
-    let newPopulation = crossover (mutation parents)
-    let newPoints     = computePoints newPopulation
-    (newPopulation, newPoints)
+    let newPopulation = crossover (mutation (uncurry selection population))
+    (newPopulation, computePoints newPopulation)
