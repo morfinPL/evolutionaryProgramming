@@ -57,6 +57,8 @@ main = do
   let selection = Evolutionary.rouletteSelection generator
   let mutation =
         Evolutionary.flipBitMutation generator (mutationProbability config)
+  let crossover =
+        Evolutionary.onePointCrossover generator (crossoverProbability config)
   let outputDirectory = outputDir config
   exists <- System.Directory.doesDirectoryExist outputDirectory
   Control.Monad.when
@@ -92,15 +94,13 @@ main = do
              0
              outputDirectory
              computedPoints
-  let iterateFunction = Evolutionary.nextGeneration
-        generator
-        (crossoverProbability config)
-        decoding
-        selection
-        mutation
-        rangeXValue
-        rangeYValue
-        functorValue
+  let iterateFunction = Evolutionary.nextGeneration decoding
+                                                    selection
+                                                    mutation
+                                                    crossover
+                                                    rangeXValue
+                                                    rangeYValue
+                                                    functorValue
   startComputing <- System.Clock.getTime System.Clock.Monotonic
   let results = take (iterations config)
                      (iterate iterateFunction (population, computedPoints))
