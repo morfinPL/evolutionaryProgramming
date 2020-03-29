@@ -4,9 +4,11 @@ import qualified Data.List                      ( length
                                                 , elemIndices
                                                 , find
                                                 )
+import qualified Data.List.Split                ( chunksOf )
 import qualified System.Random                  ( RandomGen
                                                 , randoms
                                                 )
+import qualified System.Random.Shuffle          ( shuffle' )
 
 
 computeProbabilities :: Double -> [Double] -> [Double]
@@ -43,3 +45,21 @@ roulette generator oldPopulation oldPoints = do
                      (System.Random.randoms generator :: [Double])
   map (indexToIndividual oldPopulation) (choicesToIndexes choices rouletteArray)
   where indexToIndividual oldPopulation index = oldPopulation !! index
+
+fight :: [([[Bool]], Double)] -> [[[Bool]]]
+fight pair = replicate
+  2
+  (if snd (head pair) < snd (last pair)
+    then fst (head pair)
+    else fst (last pair)
+  )
+
+champion
+  :: System.Random.RandomGen g => g -> [[[Bool]]] -> [[Double]] -> [[[Bool]]]
+champion generator oldPopulation oldPoints = System.Random.Shuffle.shuffle'
+  (concatMap
+    fight
+    (Data.List.Split.chunksOf 2 (zip oldPopulation (map last oldPoints)))
+  )
+  (length oldPopulation)
+  generator

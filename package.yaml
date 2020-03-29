@@ -27,6 +27,7 @@ dependencies:
   - split
   - text
   - config-ini
+  - random-shuffle
   - xorshift
   - MonadRandom
 
