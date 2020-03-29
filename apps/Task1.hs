@@ -55,6 +55,7 @@ main = do
   let encoding        = id -- Evolutionary.binaryToGrayCode
   let decoding        = id -- Evolutionary.grayCodeToBinary
   let selection = Evolutionary.generateNewPopulationByRoulette generator
+  let mutation = Evolutionary.mutate generator (mutationProbability config)
   let outputDirectory = outputDir config
   exists <- System.Directory.doesDirectoryExist outputDirectory
   Control.Monad.when
@@ -92,10 +93,10 @@ main = do
              computedPoints
   let iterateFunction = Evolutionary.nextGeneration
         generator
-        (mutationProbability config)
         (crossoverProbability config)
         decoding
         selection
+        mutation
         rangeXValue
         rangeYValue
         functorValue
