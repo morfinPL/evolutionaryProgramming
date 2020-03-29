@@ -28,6 +28,7 @@ import qualified System.Clock                   ( getTime
                                                 )
 
 import qualified Coding
+import qualified Crossovers
 import qualified Evolutionary
 import qualified Mutations
 import qualified Objectives
@@ -61,7 +62,7 @@ main = do
   let mutation =
         Mutations.flipBitMutation generator (mutationProbability config)
   let crossover =
-        Evolutionary.onePointCrossover generator (crossoverProbability config)
+        Crossovers.onePointCrossover generator (crossoverProbability config)
   let outputDirectory = outputDir config
   exists <- System.Directory.doesDirectoryExist outputDirectory
   Control.Monad.when
