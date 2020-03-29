@@ -52,10 +52,11 @@ main = do
   let isoPointsValue               = Objectives.isoPoints objectiveFunction
   let groundLevelValue             = Objectives.groundLevel objectiveFunction
   generator <- Random.Xorshift.Int64.newXorshift64
-  let encoding        = id -- Evolutionary.binaryToGrayCode
-  let decoding        = id -- Evolutionary.grayCodeToBinary
-  let selection = Evolutionary.generateNewPopulationByRoulette generator
-  let mutation = Evolutionary.mutate generator (mutationProbability config)
+  let encoding  = id -- Evolutionary.binaryToGrayCode
+  let decoding  = id -- Evolutionary.grayCodeToBinary
+  let selection = Evolutionary.rouletteSelection generator
+  let mutation =
+        Evolutionary.flipBitMutation generator (mutationProbability config)
   let outputDirectory = outputDir config
   exists <- System.Directory.doesDirectoryExist outputDirectory
   Control.Monad.when
