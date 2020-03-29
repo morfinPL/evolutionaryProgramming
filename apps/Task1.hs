@@ -58,9 +58,11 @@ main = do
   let isoPointsValue               = Objectives.isoPoints objectiveFunction
   let groundLevelValue             = Objectives.groundLevel objectiveFunction
   generator <- Random.Xorshift.Int64.newXorshift64
-  let encoding        = if sga config then id else Coding.grayCoding
-  let decoding        = if sga config then id else Coding.grayDecoding
-  let selection       = Selections.roulette generator
+  let encoding = if sga config then id else Coding.grayCoding
+  let decoding = if sga config then id else Coding.grayDecoding
+  let selection = if sga config
+        then Selections.roulette generator
+        else Selections.champion generator
   let mutation = Mutations.flipBit generator (mutationProbability config)
   let crossover = Crossovers.onePoint generator (crossoverProbability config)
   let outputDirectory = outputDir config
