@@ -62,6 +62,8 @@ main = do
   let mutation = Mutations.flipBit generator (mutationProbability config)
   let crossover = Crossovers.onePoint generator (crossoverProbability config)
   let outputDirectory = outputDir config
+  let computePoints =
+        Utils.computePoints functorValue rangeXValue rangeYValue decoding
   exists <- System.Directory.doesDirectoryExist outputDirectory
   Control.Monad.when
     exists
@@ -100,9 +102,7 @@ main = do
                                                     selection
                                                     mutation
                                                     crossover
-                                                    rangeXValue
-                                                    rangeYValue
-                                                    functorValue
+                                                    computePoints
   startComputing <- System.Clock.getTime System.Clock.Monotonic
   let results = take (iterations config)
                      (iterate iterateFunction (population, computedPoints))
