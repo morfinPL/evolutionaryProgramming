@@ -5,9 +5,9 @@ import qualified System.Random                  ( RandomGen )
 
 import qualified Utils
 
-flipBitMutation
+flipBit
   :: System.Random.RandomGen g => g -> Rational -> [[[Bool]]] -> [[[Bool]]]
-flipBitMutation generator probability population = do
+flipBit generator probability population = do
   let dimensions               = length (head population)
   let numberOfBitsPerDimension = length (head (head population))
   let flattenPopulation        = concat (concat population)

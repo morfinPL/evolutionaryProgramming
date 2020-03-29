@@ -56,13 +56,11 @@ main = do
   let isoPointsValue               = Objectives.isoPoints objectiveFunction
   let groundLevelValue             = Objectives.groundLevel objectiveFunction
   generator <- Random.Xorshift.Int64.newXorshift64
-  let encoding  = id -- Coding.grayCoding
-  let decoding  = id -- Coding.grayDecoding
-  let selection = Selections.rouletteSelection generator
-  let mutation =
-        Mutations.flipBitMutation generator (mutationProbability config)
-  let crossover =
-        Crossovers.onePointCrossover generator (crossoverProbability config)
+  let encoding        = id -- Coding.grayCoding
+  let decoding        = id -- Coding.grayDecoding
+  let selection       = Selections.roulette generator
+  let mutation = Mutations.flipBit generator (mutationProbability config)
+  let crossover = Crossovers.onePoint generator (crossoverProbability config)
   let outputDirectory = outputDir config
   exists <- System.Directory.doesDirectoryExist outputDirectory
   Control.Monad.when
