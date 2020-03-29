@@ -140,20 +140,3 @@ nextGeneration decoding selection mutation crossover rangeX rangeY objectiveFunc
                                         decoding
                                         newPopulation
     (newPopulation, newPoints)
-
-xor :: Bool -> Bool -> Bool
-xor p q = (p && not q) || (not p && q)
-
-xorArray :: [(Bool, Bool)] -> [Bool]
-xorArray = map (uncurry xor)
-
-binaryToGrayCode :: [Bool] -> [Bool]
-binaryToGrayCode []           = []
-binaryToGrayCode [b         ] = [b]
-binaryToGrayCode (b : c : bs) = b `xor` c : binaryToGrayCode (c : bs)
-
-grayCodeToBinary :: [Bool] -> [Bool]
-grayCodeToBinary = foldr go []
- where
-  go c []         = [c]
-  go c bs@(b : _) = b `xor` c : bs
