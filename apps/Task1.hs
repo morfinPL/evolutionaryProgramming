@@ -15,6 +15,7 @@ import qualified Data.Ini.Config                ( IniParser
                                                 , section
                                                 , fieldOf
                                                 , number
+                                                , flag
                                                 , string
                                                 , parseIniFile
                                                 )
@@ -56,8 +57,8 @@ main = do
   let isoPointsValue               = Objectives.isoPoints objectiveFunction
   let groundLevelValue             = Objectives.groundLevel objectiveFunction
   generator <- Random.Xorshift.Int64.newXorshift64
-  let encoding        = id -- Coding.grayCoding
-  let decoding        = id -- Coding.grayDecoding
+  let encoding        = if sga config then id else Coding.grayCoding
+  let decoding        = if sga config then id else Coding.grayDecoding
   let selection       = Selections.roulette generator
   let mutation = Mutations.flipBit generator (mutationProbability config)
   let crossover = Crossovers.onePoint generator (crossoverProbability config)
@@ -171,6 +172,7 @@ data Config = Config
   , iterations :: Int
   , mutationProbability :: Rational
   , crossoverProbability :: Rational
+  , sga :: Bool
   } deriving (Eq, Show)
 
 parseConfig :: Data.Ini.Config.IniParser Config
@@ -185,6 +187,7 @@ parseConfig = Data.Ini.Config.section "Task1" $ do
                                                  Data.Ini.Config.number
   crossoverProbability <- Data.Ini.Config.fieldOf "crossoverProbability"
                                                   Data.Ini.Config.number
+  sga <- Data.Ini.Config.fieldOf "sga" Data.Ini.Config.flag
   return
     (Config outputDir
             function
@@ -193,6 +196,7 @@ parseConfig = Data.Ini.Config.section "Task1" $ do
             iterations
             mutationProbability
             crossoverProbability
+            sga
     )
 
 getConfig path = do
@@ -207,10 +211,11 @@ getConfig path = do
   let defaultConfig = Config "output\\first"
                              "first"
                              1024
-                             64
-                             1000
+                             32
+                             100
                              (1 Data.Ratio.% 1000)
                              (6 Data.Ratio.% 10)
+                             True
   let config = Data.Either.fromRight defaultConfig parsingResult
   print config
   return config
