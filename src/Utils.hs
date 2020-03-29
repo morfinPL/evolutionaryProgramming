@@ -1,19 +1,27 @@
 module Utils where
 
-import qualified System.Process                 ( rawSystem )
-import qualified System.Random                  ( RandomGen
-                                                , randoms
+import qualified Control.Monad.Random           ( evalRand
+                                                , fromList
                                                 )
 import qualified Control.Monad                  ( when )
+import qualified Data.Bool                      ( bool )
 import qualified Data.List                      ( length
                                                 , sortBy
                                                 )
 import qualified Data.List.Split                ( chunksOf )
-import qualified Data.Bool                      ( bool )
 import qualified System.Directory               ( createDirectoryIfMissing )
 import qualified System.IO                      ( writeFile
                                                 , appendFile
                                                 )
+import qualified System.Process                 ( rawSystem )
+import qualified System.Random                  ( RandomGen
+                                                , randoms
+                                                )
+
+
+weightedList :: System.Random.RandomGen g => g -> [(a, Rational)] -> [a]
+weightedList generator weights = Control.Monad.Random.evalRand m generator
+  where m = sequence . repeat . Control.Monad.Random.fromList $ weights
 
 
 generatePopulation

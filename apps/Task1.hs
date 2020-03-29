@@ -29,6 +29,7 @@ import qualified System.Clock                   ( getTime
 
 import qualified Coding
 import qualified Evolutionary
+import qualified Mutations
 import qualified Objectives
 import qualified Selections
 import qualified Utils
@@ -58,7 +59,7 @@ main = do
   let decoding  = id -- Coding.grayDecoding
   let selection = Selections.rouletteSelection generator
   let mutation =
-        Evolutionary.flipBitMutation generator (mutationProbability config)
+        Mutations.flipBitMutation generator (mutationProbability config)
   let crossover =
         Evolutionary.onePointCrossover generator (crossoverProbability config)
   let outputDirectory = outputDir config
