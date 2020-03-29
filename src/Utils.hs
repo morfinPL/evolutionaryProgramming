@@ -8,41 +8,17 @@ import qualified Data.Bool                      ( bool )
 import qualified Data.List                      ( length
                                                 , sortBy
                                                 )
-import qualified Data.List.Split                ( chunksOf )
 import qualified System.Directory               ( createDirectoryIfMissing )
 import qualified System.IO                      ( writeFile
                                                 , appendFile
                                                 )
 import qualified System.Process                 ( rawSystem )
-import qualified System.Random                  ( RandomGen
-                                                , randoms
-                                                )
+import qualified System.Random                  ( RandomGen )
 
 
 weightedList :: System.Random.RandomGen g => g -> [(a, Rational)] -> [a]
 weightedList generator weights = Control.Monad.Random.evalRand m generator
   where m = sequence . repeat . Control.Monad.Random.fromList $ weights
-
-
-generatePopulation
-  :: System.Random.RandomGen g
-  => Int
-  -> Int
-  -> Int
-  -> g
-  -> ([Bool] -> [Bool])
-  -> [[[Bool]]]
-generatePopulation populationSize dimensions numberOfFeaturesPerDimension generator coding
-  = map
-    (map coding . Data.List.Split.chunksOf numberOfFeaturesPerDimension)
-    (Data.List.Split.chunksOf
-      (dimensions * numberOfFeaturesPerDimension)
-      (take (dimensions * numberOfFeaturesPerDimension * populationSize)
-            (System.Random.randoms generator :: [Bool])
-      )
-    )
-  where booleaner x = x == 1
-
 
 integerToDouble :: Int -> Integer -> Double
 integerToDouble power x = fromIntegral x / fromIntegral (2 ^ power - 1)

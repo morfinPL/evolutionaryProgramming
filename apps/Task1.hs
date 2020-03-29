@@ -48,6 +48,7 @@ main = do
   let configPath = if Data.List.length arguments == 1
         then head arguments
         else "config\\Task1\\config.txt"
+  let dimensions = 2
   config <- getConfig configPath
   let objectiveFunction = Objectives.parseObjectiveFunction (function config)
   let functorValue                 = Objectives.functor objectiveFunction
@@ -69,11 +70,11 @@ main = do
   Control.Monad.when
     exists
     (System.Directory.removeDirectoryRecursive outputDirectory)
-  let population = Utils.generatePopulation (populationSize config)
-                                            2
-                                            (features config)
-                                            generator
-                                            encoding
+  let population = Evolutionary.generatePopulation generator
+                                                   (populationSize config)
+                                                   dimensions
+                                                   (features config)
+                                                   encoding
   let computedPoints = Utils.computePoints functorValue
                                            rangeXValue
                                            rangeYValue
