@@ -66,7 +66,9 @@ main = do
   let mutation = if sga config
         then Mutations.flipBit generator (mutationProbability config)
         else Mutations.reverseSequence generator (mutationProbability config)
-  let crossover = Crossovers.onePoint generator (crossoverProbability config)
+  let crossover = if sga config
+        then Crossovers.onePoint generator (crossoverProbability config)
+        else Crossovers.randomPattern generator (crossoverProbability config)
   let outputDirectory = outputDir config
   let computePoints =
         Utils.computePoints functorValue rangeXValue rangeYValue decoding

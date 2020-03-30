@@ -3,6 +3,7 @@ module Crossovers where
 import qualified Data.List                      ( length )
 import qualified Data.List.Split                ( chunksOf )
 import qualified System.Random                  ( RandomGen
+                                                , randoms
                                                 , randomRs
                                                 )
 
@@ -56,3 +57,35 @@ onePoint generator probability population = do
           else fst (fst bigTuple)
   concatMap coordinatesToIndividuals
             (Data.List.Split.chunksOf dimensions crossedCoordinates)
+
+
+choose :: Bool -> ((Bool, Bool), Bool) -> Bool
+choose mode bigTuple = if mode
+  then (if snd bigTuple then fst (fst bigTuple) else snd (fst bigTuple))
+  else (if not (snd bigTuple) then fst (fst bigTuple) else snd (fst bigTuple))
+
+patternCross
+  :: System.Random.RandomGen g => g -> Int -> ([[Bool]], Bool) -> [[[Bool]]]
+patternCross generator bits tuple = if not (snd tuple)
+  then map (Data.List.Split.chunksOf bits) (fst tuple)
+  else do
+    let pattern = take (length (head (fst tuple)))
+                       (System.Random.randoms generator :: [Bool])
+    let zipped = zip (zip (head (fst tuple)) (last (fst tuple))) pattern
+    map (Data.List.Split.chunksOf bits)
+        [map (choose True) zipped, map (choose False) zipped]
+
+
+randomPattern
+  :: System.Random.RandomGen g => g -> Rational -> [[[Bool]]] -> [[[Bool]]]
+randomPattern generator probability population = do
+  let bits                    = length (head (head population))
+  let concatenatedIndividuals = map concat population
+  let pairs = Data.List.Split.chunksOf 2 concatenatedIndividuals
+  let crossoverIndicators = take
+        (length pairs)
+        (Utils.weightedList generator
+                            [(True, probability), (False, 1 - probability)]
+        )
+  concat
+    (zipWith (curry (patternCross generator bits)) pairs crossoverIndicators)
