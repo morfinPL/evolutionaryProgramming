@@ -7,3 +7,4 @@ iterations = 100
 mutationProbability = 1 % 1000
 crossoverProbability = 6 % 10
 sga = True
+visualization = True
