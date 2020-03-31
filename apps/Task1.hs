@@ -36,6 +36,7 @@ main = do
   let configPath = if Data.List.length arguments == 1
         then head arguments
         else "config\\Task1\\config.txt"
+
   let dimensions = 2
   config <- Configs.loadTask1Config configPath
   let objectiveFunction =
@@ -48,6 +49,8 @@ main = do
   let groundLevel             = Objectives.groundLevel objectiveFunction
   let sga                     = Configs.sga config
   let visualization           = Configs.visualization config
+  let outputDirectory         = Configs.outputDir config
+
   generator <- System.Random.Mersenne.Pure64.newPureMT
   let encoding = if sga then id else Coding.grayCoding
   let decoding = if sga then id else Coding.grayDecoding
@@ -62,9 +65,9 @@ main = do
         then Crossovers.onePoint generator (Configs.crossoverProbability config)
         else Crossovers.randomPattern generator
                                       (Configs.crossoverProbability config)
-  let outputDirectory = Configs.outputDir config
-  let computePoints   = Utils.computePoints functor rangeX rangeY decoding
+  let computePoints = Utils.computePoints functor rangeX rangeY decoding
   exists <- System.Directory.doesDirectoryExist outputDirectory
+
   Control.Monad.when
     exists
     (System.Directory.removeDirectoryRecursive outputDirectory)
@@ -76,27 +79,30 @@ main = do
         encoding
   let computedPoints =
         Utils.computePoints functor rangeX rangeY decoding population
+
   putStrLn "Best initial guess:"
   print (head (Utils.sortByLastValue computedPoints))
+
   Control.Monad.when visualization $ do
-    Utils.plot objectiveFunctionString
-               isoPoints
-               groundLevel
-               rangeX
-               rangeY
-               True
-               0
-               outputDirectory
-               computedPoints
-    Utils.plot objectiveFunctionString
-               isoPoints
-               groundLevel
-               rangeX
-               rangeY
-               False
-               0
-               outputDirectory
-               computedPoints
+    Utils.plot3D objectiveFunctionString
+                 isoPoints
+                 groundLevel
+                 rangeX
+                 rangeY
+                 True
+                 0
+                 outputDirectory
+                 computedPoints
+    Utils.plot3D objectiveFunctionString
+                 isoPoints
+                 groundLevel
+                 rangeX
+                 rangeY
+                 False
+                 0
+                 outputDirectory
+                 computedPoints
+
   let nextGeneration = Evolutionary.nextGeneration decoding
                                                    selection
                                                    mutation
@@ -105,12 +111,14 @@ main = do
   startComputing <- System.Clock.getTime System.Clock.Monotonic
   let results = take (Configs.iterations config)
                      (iterate nextGeneration (population, computedPoints))
+
   putStrLn "Result:"
   print (head (Utils.sortByLastValue (snd (last results))))
   endComputing <- System.Clock.getTime System.Clock.Monotonic
   putStrLn "Processing time:"
   Formatting.fprint Formatting.Clock.timeSpecs startComputing endComputing
   putStrLn ""
+
   Control.Monad.when visualization $ do
     putStrLn "Saving output started!"
     startSaving <- System.Clock.getTime System.Clock.Monotonic
@@ -143,21 +151,21 @@ helper
   -> IO ()
 helper objectiveFunctionString isoPoints groundLevel rangeX rangeY outputDirectory x
   = do
-    Utils.plot objectiveFunctionString
-               isoPoints
-               groundLevel
-               rangeX
-               rangeY
-               True
-               (snd x)
-               outputDirectory
-               (snd (fst x))
-    Utils.plot objectiveFunctionString
-               isoPoints
-               groundLevel
-               rangeX
-               rangeY
-               False
-               (snd x)
-               outputDirectory
-               (snd (fst x))
+    Utils.plot3D objectiveFunctionString
+                 isoPoints
+                 groundLevel
+                 rangeX
+                 rangeY
+                 True
+                 (snd x)
+                 outputDirectory
+                 (snd (fst x))
+    Utils.plot3D objectiveFunctionString
+                 isoPoints
+                 groundLevel
+                 rangeX
+                 rangeY
+                 False
+                 (snd x)
+                 outputDirectory
+                 (snd (fst x))

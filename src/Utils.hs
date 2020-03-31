@@ -102,7 +102,7 @@ deleteTempFiles outputDirectory iteration = do
     (outputDirectory ++ "\\txt\\best" ++ show iteration ++ ".txt")
 
 
-plot
+plot3D
   :: String
   -> Integer
   -> Double
@@ -113,7 +113,7 @@ plot
   -> String
   -> [[Double]]
   -> IO ()
-plot functionString samples planeLevel rangeX rangeY up iteration outputDirectory points
+plot3D functionString samples planeLevel rangeX rangeY up iteration outputDirectory points
   = do
     Control.Monad.when up (writePointsToFile outputDirectory iteration points)
     let
