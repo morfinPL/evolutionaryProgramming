@@ -207,7 +207,7 @@ plot2D outputDirectory title = do
   return ()
 
 
-helper
+plot2DObjectiveFunctionVisualizationFromTwoPerspectives
   :: String
   -> Integer
   -> Double
@@ -216,7 +216,7 @@ helper
   -> String
   -> (([[[Bool]]], [[Double]]), Int)
   -> IO ()
-helper objectiveFunctionString isoPoints groundLevel rangeX rangeY outputDirectory x
+plot2DObjectiveFunctionVisualizationFromTwoPerspectives objectiveFunctionString isoPoints groundLevel rangeX rangeY outputDirectory x
   = do
     Utils.plot3D objectiveFunctionString
                  isoPoints
