@@ -24,6 +24,7 @@ data Task1 = Task1
   , mutationProbability :: Rational
   , crossoverProbability :: Rational
   , sga :: Bool
+  , visualization :: Bool
   } deriving (Eq, Show)
 
 parseConfig :: Data.Ini.Config.IniParser Task1
@@ -38,7 +39,8 @@ parseConfig = Data.Ini.Config.section "Task1" $ do
                                                  Data.Ini.Config.number
   crossoverProbability <- Data.Ini.Config.fieldOf "crossoverProbability"
                                                   Data.Ini.Config.number
-  sga <- Data.Ini.Config.fieldOf "sga" Data.Ini.Config.flag
+  sga           <- Data.Ini.Config.fieldOf "sga" Data.Ini.Config.flag
+  visualization <- Data.Ini.Config.fieldOf "visualization" Data.Ini.Config.flag
   return
     (Task1 outputDir
            function
@@ -48,6 +50,7 @@ parseConfig = Data.Ini.Config.section "Task1" $ do
            mutationProbability
            crossoverProbability
            sga
+           visualization
     )
 
 loadTask1Config path = do
@@ -66,6 +69,7 @@ loadTask1Config path = do
                             100
                             (1 Data.Ratio.% 1000)
                             (6 Data.Ratio.% 10)
+                            True
                             True
   let config = Data.Either.fromRight defaultConfig parsingResult
   print config

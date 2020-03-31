@@ -40,29 +40,30 @@ main = do
   config <- Configs.loadTask1Config configPath
   let objectiveFunction =
         Objectives.parseObjectiveFunction (Configs.function config)
-  let functorValue                 = Objectives.functor objectiveFunction
-  let objectiveFunctionStringValue = Objectives.string objectiveFunction
-  let rangeXValue                  = Objectives.rangeX objectiveFunction
-  let rangeYValue                  = Objectives.rangeY objectiveFunction
-  let isoPointsValue               = Objectives.isoPoints objectiveFunction
-  let groundLevelValue             = Objectives.groundLevel objectiveFunction
+  let functor                 = Objectives.functor objectiveFunction
+  let objectiveFunctionString = Objectives.string objectiveFunction
+  let rangeX                  = Objectives.rangeX objectiveFunction
+  let rangeY                  = Objectives.rangeY objectiveFunction
+  let isoPoints               = Objectives.isoPoints objectiveFunction
+  let groundLevel             = Objectives.groundLevel objectiveFunction
+  let sga                     = Configs.sga config
+  let visualization           = Configs.visualization config
   generator <- System.Random.Mersenne.Pure64.newPureMT
-  let encoding = if Configs.sga config then id else Coding.grayCoding
-  let decoding = if Configs.sga config then id else Coding.grayDecoding
-  let selection = if Configs.sga config
+  let encoding = if sga then id else Coding.grayCoding
+  let decoding = if sga then id else Coding.grayDecoding
+  let selection = if sga
         then Selections.roulette generator
         else Selections.champion generator
-  let mutation = if Configs.sga config
+  let mutation = if sga
         then Mutations.flipBit generator (Configs.mutationProbability config)
         else Mutations.reverseSequence generator
                                        (Configs.mutationProbability config)
-  let crossover = if Configs.sga config
+  let crossover = if sga
         then Crossovers.onePoint generator (Configs.crossoverProbability config)
         else Crossovers.randomPattern generator
                                       (Configs.crossoverProbability config)
   let outputDirectory = Configs.outputDir config
-  let computePoints =
-        Utils.computePoints functorValue rangeXValue rangeYValue decoding
+  let computePoints   = Utils.computePoints functor rangeX rangeY decoding
   exists <- System.Directory.doesDirectoryExist outputDirectory
   Control.Monad.when
     exists
@@ -73,64 +74,62 @@ main = do
         dimensions
         (Configs.features config)
         encoding
-  let computedPoints = Utils.computePoints functorValue
-                                           rangeXValue
-                                           rangeYValue
-                                           decoding
-                                           population
+  let computedPoints =
+        Utils.computePoints functor rangeX rangeY decoding population
   putStrLn "Best initial guess:"
   print (head (Utils.sortByLastValue computedPoints))
-  Utils.plot objectiveFunctionStringValue
-             isoPointsValue
-             groundLevelValue
-             rangeXValue
-             rangeYValue
-             True
-             0
-             outputDirectory
-             computedPoints
-  Utils.plot objectiveFunctionStringValue
-             isoPointsValue
-             groundLevelValue
-             rangeXValue
-             rangeYValue
-             False
-             0
-             outputDirectory
-             computedPoints
-  let iterateFunction = Evolutionary.nextGeneration decoding
-                                                    selection
-                                                    mutation
-                                                    crossover
-                                                    computePoints
+  Control.Monad.when visualization $ do
+    Utils.plot objectiveFunctionString
+               isoPoints
+               groundLevel
+               rangeX
+               rangeY
+               True
+               0
+               outputDirectory
+               computedPoints
+    Utils.plot objectiveFunctionString
+               isoPoints
+               groundLevel
+               rangeX
+               rangeY
+               False
+               0
+               outputDirectory
+               computedPoints
+  let nextGeneration = Evolutionary.nextGeneration decoding
+                                                   selection
+                                                   mutation
+                                                   crossover
+                                                   computePoints
   startComputing <- System.Clock.getTime System.Clock.Monotonic
   let results = take (Configs.iterations config)
-                     (iterate iterateFunction (population, computedPoints))
+                     (iterate nextGeneration (population, computedPoints))
   putStrLn "Result:"
   print (head (Utils.sortByLastValue (snd (last results))))
   endComputing <- System.Clock.getTime System.Clock.Monotonic
   putStrLn "Processing time:"
   Formatting.fprint Formatting.Clock.timeSpecs startComputing endComputing
   putStrLn ""
-  putStrLn "Saving output started!"
-  startSaving <- System.Clock.getTime System.Clock.Monotonic
-  let resultsWithIndexes = zip results [1, 2 .. (Configs.iterations config)]
-  Control.Monad.mapM_
-    (helper objectiveFunctionStringValue
-            isoPointsValue
-            groundLevelValue
-            rangeXValue
-            rangeYValue
-            outputDirectory
-    )
-    resultsWithIndexes
-  Utils.plot2D outputDirectory "best"
-  Utils.plot2D outputDirectory "mean"
-  endSaving <- System.Clock.getTime System.Clock.Monotonic
-  putStrLn "Saving time:"
-  Formatting.fprint Formatting.Clock.timeSpecs startSaving endSaving
-  putStrLn "\nSaving output finished!"
-
+  Control.Monad.when visualization $ do
+    putStrLn "Saving output started!"
+    startSaving <- System.Clock.getTime System.Clock.Monotonic
+    let resultsWithIndexes = zip results [1, 2 .. (Configs.iterations config)]
+    Control.Monad.mapM_
+      (helper objectiveFunctionString
+              isoPoints
+              groundLevel
+              rangeX
+              rangeY
+              outputDirectory
+      )
+      resultsWithIndexes
+    Utils.plot2D outputDirectory "best"
+    Utils.plot2D outputDirectory "mean"
+    endSaving <- System.Clock.getTime System.Clock.Monotonic
+    putStrLn "Saving time:"
+    Formatting.fprint Formatting.Clock.timeSpecs startSaving endSaving
+    putStrLn "\nSaving output finished!"
 
 
 helper
@@ -142,22 +141,22 @@ helper
   -> String
   -> (([[[Bool]]], [[Double]]), Int)
   -> IO ()
-helper objectiveFunctionStringValue isoPointsValue groundLevelValue rangeXValue rangeYValue outputDirectory x
+helper objectiveFunctionString isoPoints groundLevel rangeX rangeY outputDirectory x
   = do
-    Utils.plot objectiveFunctionStringValue
-               isoPointsValue
-               groundLevelValue
-               rangeXValue
-               rangeYValue
+    Utils.plot objectiveFunctionString
+               isoPoints
+               groundLevel
+               rangeX
+               rangeY
                True
                (snd x)
                outputDirectory
                (snd (fst x))
-    Utils.plot objectiveFunctionStringValue
-               isoPointsValue
-               groundLevelValue
-               rangeXValue
-               rangeYValue
+    Utils.plot objectiveFunctionString
+               isoPoints
+               groundLevel
+               rangeX
+               rangeY
                False
                (snd x)
                outputDirectory
