@@ -1,7 +1,6 @@
 module Selections where
 
-import qualified Data.List                      ( length
-                                                , elemIndices
+import qualified Data.List                      ( elemIndices
                                                 , find
                                                 )
 import qualified Data.List.Split                ( chunksOf )
@@ -29,8 +28,7 @@ computeRouletteArray points = do
 
 choicesToIndexes :: [Double] -> [Double] -> [Int]
 choicesToIndexes choices rouletteArray = map (choiceToIndex rouletteArray)
-                                             choices
- where
+                                             choices where
   choiceToIndex rouletteArray a = head
     (Data.List.elemIndices (Data.List.find (>= a) rouletteArray)
                            (map Just rouletteArray)
