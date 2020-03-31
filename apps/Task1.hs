@@ -2,15 +2,10 @@
 
 module Task1 where
 
-import qualified System.Environment             ( getArgs )
-import qualified Random.Xorshift.Int64          ( newXorshift64 )
-import qualified System.Directory               ( doesDirectoryExist
-                                                , removeDirectoryRecursive
-                                                )
 import qualified Control.Monad                  ( mapM_
                                                 , when
                                                 )
-import qualified Data.Text                      ( pack )
+import qualified Data.Either                    ( fromRight )
 import qualified Data.Ini.Config                ( IniParser
                                                 , section
                                                 , fieldOf
@@ -19,14 +14,19 @@ import qualified Data.Ini.Config                ( IniParser
                                                 , string
                                                 , parseIniFile
                                                 )
-import qualified Data.Either                    ( fromRight )
 import qualified Data.List                      ( length )
 import qualified Data.Ratio                     ( (%) )
+import qualified Data.Text                      ( pack )
 import qualified Formatting                     ( fprint )
 import qualified Formatting.Clock               ( timeSpecs )
 import qualified System.Clock                   ( getTime
                                                 , Clock(Monotonic)
                                                 )
+import qualified System.Environment             ( getArgs )
+import qualified System.Directory               ( doesDirectoryExist
+                                                , removeDirectoryRecursive
+                                                )
+import qualified System.Random.Mersenne.Pure64  ( newPureMT )
 
 import qualified Coding
 import qualified Crossovers
@@ -57,7 +57,7 @@ main = do
   let rangeYValue                  = Objectives.rangeY objectiveFunction
   let isoPointsValue               = Objectives.isoPoints objectiveFunction
   let groundLevelValue             = Objectives.groundLevel objectiveFunction
-  generator <- Random.Xorshift.Int64.newXorshift64
+  generator <- System.Random.Mersenne.Pure64.newPureMT
   let encoding = if sga config then id else Coding.grayCoding
   let decoding = if sga config then id else Coding.grayDecoding
   let selection = if sga config
