@@ -3,7 +3,6 @@ module Task1 where
 import qualified Control.Monad                  ( mapM_
                                                 , when
                                                 )
-import qualified Data.List                      ( length )
 import qualified Formatting                     ( fprint )
 import qualified Formatting.Clock               ( timeSpecs )
 import qualified System.Clock                   ( getTime
@@ -28,12 +27,12 @@ import qualified Utils
 main :: IO ()
 main = do
   arguments <- System.Environment.getArgs
-  if Data.List.length arguments /= 1
+  if length arguments /= 1
     then
       putStrLn
         "Application Task1 takes only one argument - configPath, if it is not passed or if you pass more arguments default config \"config\\Task1\\config.txt\" is loaded."
     else putStrLn ("Application Task1 is loading config: " ++ head arguments)
-  let configPath = if Data.List.length arguments == 1
+  let configPath = if length arguments == 1
         then head arguments
         else "config\\Task1\\config.txt"
 

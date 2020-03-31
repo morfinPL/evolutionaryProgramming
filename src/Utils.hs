@@ -7,9 +7,7 @@ import qualified Control.Monad                  ( when
                                                 , unless
                                                 )
 import qualified Data.Bool                      ( bool )
-import qualified Data.List                      ( length
-                                                , sortBy
-                                                )
+import qualified Data.List                      ( sortBy )
 import qualified System.Directory               ( createDirectoryIfMissing
                                                 , removeFile
                                                 )

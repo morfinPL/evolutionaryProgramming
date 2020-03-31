@@ -1,6 +1,5 @@
 module Crossovers where
 
-import qualified Data.List                      ( length )
 import qualified Data.List.Split                ( chunksOf )
 import qualified System.Random                  ( RandomGen
                                                 , randoms
