@@ -124,12 +124,12 @@ main = do
     startSaving <- System.Clock.getTime System.Clock.Monotonic
     let resultsWithIndexes = zip results [1, 2 .. (Configs.iterations config)]
     Control.Monad.mapM_
-      (helper objectiveFunctionString
-              isoPoints
-              groundLevel
-              rangeX
-              rangeY
-              outputDirectory
+      (Utils.helper objectiveFunctionString
+                    isoPoints
+                    groundLevel
+                    rangeX
+                    rangeY
+                    outputDirectory
       )
       resultsWithIndexes
     Utils.plot2D outputDirectory "best"
@@ -138,34 +138,3 @@ main = do
     putStrLn "Saving time:"
     Formatting.fprint Formatting.Clock.timeSpecs startSaving endSaving
     putStrLn "\nSaving output finished!"
-
-
-helper
-  :: String
-  -> Integer
-  -> Double
-  -> (Double, Double)
-  -> (Double, Double)
-  -> String
-  -> (([[[Bool]]], [[Double]]), Int)
-  -> IO ()
-helper objectiveFunctionString isoPoints groundLevel rangeX rangeY outputDirectory x
-  = do
-    Utils.plot3D objectiveFunctionString
-                 isoPoints
-                 groundLevel
-                 rangeX
-                 rangeY
-                 True
-                 (snd x)
-                 outputDirectory
-                 (snd (fst x))
-    Utils.plot3D objectiveFunctionString
-                 isoPoints
-                 groundLevel
-                 rangeX
-                 rangeY
-                 False
-                 (snd x)
-                 outputDirectory
-                 (snd (fst x))
