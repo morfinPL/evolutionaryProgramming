@@ -83,25 +83,14 @@ main = do
   putStrLn "Best initial guess:"
   print (head (Utils.sortByLastValue computedPoints))
 
-  Control.Monad.when visualization $ do
-    Utils.plot3D objectiveFunctionString
-                 isoPoints
-                 groundLevel
-                 rangeX
-                 rangeY
-                 True
-                 0
-                 outputDirectory
-                 computedPoints
-    Utils.plot3D objectiveFunctionString
-                 isoPoints
-                 groundLevel
-                 rangeX
-                 rangeY
-                 False
-                 0
-                 outputDirectory
-                 computedPoints
+  Utils.plot2DObjectiveFunctionVisualizationFromTwoPerspectives
+    objectiveFunctionString
+    isoPoints
+    groundLevel
+    rangeX
+    rangeY
+    outputDirectory
+    ((population, computedPoints), 0)
 
   let nextGeneration = Evolutionary.nextGeneration decoding
                                                    selection
