@@ -7,7 +7,9 @@ import qualified Control.Monad                  ( when
                                                 , unless
                                                 )
 import qualified Data.Bool                      ( bool )
-import qualified Data.List                      ( sortBy )
+import qualified Data.List                      ( sortBy
+                                                , minimumBy
+                                                )
 import qualified System.Directory               ( createDirectoryIfMissing
                                                 , removeFile
                                                 )
@@ -62,12 +64,10 @@ computePoints objectiveFunction rangeX rangeY decoding population = do
     [x, y, z]
 
 
-sortByLastValue :: (Ord a) => [[a]] -> [[a]]
-sortByLastValue = Data.List.sortBy (\xs ys -> compare (last xs) (last ys))
-
 writePointsToFile :: String -> Int -> [[Double]] -> IO ()
 writePointsToFile outputDirectory iteration points = do
-  let sortedPoints = sortByLastValue points
+  let sortedPoints =
+        Data.List.sortBy (\xs ys -> compare (last xs) (last ys)) points
   let bestValue = last (head sortedPoints)
   let mean = sum (map last sortedPoints) / fromIntegral (length sortedPoints)
   let strings = map pointToString sortedPoints       where
@@ -91,6 +91,7 @@ writePointsToFile outputDirectory iteration points = do
                        (show iteration ++ "\t" ++ show bestValue ++ "\n")
   System.IO.appendFile (outputDirectory ++ "\\txt\\mean.txt")
                        (show iteration ++ "\t" ++ show mean ++ "\n")
+
 
 deleteTempFiles :: String -> Int -> IO ()
 deleteTempFiles outputDirectory iteration = do
@@ -234,3 +235,18 @@ plot2DObjectiveFunctionVisualizationFromTwoPerspectives objectiveFunctionString 
                  (snd x)
                  outputDirectory
                  (snd (fst x))
+
+
+findBestIndividualInIteration
+  :: Ord a => (([[[Bool]]], [[a]]), Int) -> ([a], Int)
+findBestIndividualInIteration iteration =
+  ( Data.List.minimumBy (\xs ys -> compare (last xs) (last ys))
+                        (snd (fst iteration))
+  , snd iteration
+  )
+
+findBestIndividualInResults
+  :: Ord a => [(([[[Bool]]], [[a]]), Int)] -> ([a], Int)
+findBestIndividualInResults results = do
+  let bests = map findBestIndividualInIteration results
+  Data.List.minimumBy (\x y -> compare (last (fst x)) (last (fst y))) bests

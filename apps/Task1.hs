@@ -30,8 +30,9 @@ main = do
   if length arguments /= 1
     then
       putStrLn
-        "Application Task1 takes only one argument - configPath, if it is not passed or if you pass more arguments default config \"config\\Task1\\config.txt\" is loaded."
-    else putStrLn ("Application Task1 is loading config: " ++ head arguments)
+        "\nApplication Task1 takes only one argument - configPath, if you pass different number of arguments default config \"config\\Task1\\config.txt\" is loaded.\n"
+    else putStrLn
+      ("\nApplication Task1 is loading config: " ++ head arguments ++ "\n")
   let configPath = if length arguments == 1
         then head arguments
         else "config\\Task1\\config.txt"
@@ -70,6 +71,7 @@ main = do
   Control.Monad.when
     (exists && visualization)
     (System.Directory.removeDirectoryRecursive outputDirectory)
+
   let population = Evolutionary.generatePopulation
         generator
         (Configs.populationSize config)
@@ -79,8 +81,10 @@ main = do
   let computedPoints =
         Utils.computePoints functor rangeX rangeY decoding population
 
-  putStrLn "Best initial guess:"
-  print (head (Utils.sortByLastValue computedPoints))
+  putStrLn "\nBest initial guess:"
+  print
+    (fst (Utils.findBestIndividualInIteration ((population, computedPoints), 0))
+    )
 
   Control.Monad.when
     visualization
@@ -99,21 +103,24 @@ main = do
                                                    mutation
                                                    crossover
                                                    computePoints
+  putStrLn "\nProcessing started!\n"
   startComputing <- System.Clock.getTime System.Clock.Monotonic
-  let results = take (Configs.iterations config)
-                     (iterate nextGeneration (population, computedPoints))
+  let results = zip
+        (take (Configs.iterations config)
+              (iterate nextGeneration (population, computedPoints))
+        )
+        [1, 2 .. (Configs.iterations config)]
 
-  putStrLn "Result:"
-  print (head (Utils.sortByLastValue (snd (last results))))
+  putStrLn "Best individual (best individual, iteration):"
+  print (Utils.findBestIndividualInResults results)
   endComputing <- System.Clock.getTime System.Clock.Monotonic
-  putStrLn "Processing time:"
+  putStrLn "\nProcessing time:"
   Formatting.fprint Formatting.Clock.timeSpecs startComputing endComputing
   putStrLn ""
 
   Control.Monad.when visualization $ do
-    putStrLn "Saving output started!"
+    putStrLn "\nSaving output started!\n"
     startSaving <- System.Clock.getTime System.Clock.Monotonic
-    let resultsWithIndexes = zip results [1, 2 .. (Configs.iterations config)]
     Control.Monad.mapM_
       (Utils.plot2DObjectiveFunctionVisualizationFromTwoPerspectives
         objectiveFunctionString
@@ -123,10 +130,10 @@ main = do
         rangeY
         outputDirectory
       )
-      resultsWithIndexes
+      results
     Utils.plot2D outputDirectory "best"
     Utils.plot2D outputDirectory "mean"
     endSaving <- System.Clock.getTime System.Clock.Monotonic
     putStrLn "Saving time:"
     Formatting.fprint Formatting.Clock.timeSpecs startSaving endSaving
-    putStrLn "\nSaving output finished!"
+    putStrLn ""
