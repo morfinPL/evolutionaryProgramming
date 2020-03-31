@@ -112,7 +112,9 @@ main = do
         [1, 2 .. (Configs.iterations config)]
 
   putStrLn "Best individual (best individual, iteration):"
-  print (Utils.findBestIndividualInResults results)
+  let result = Utils.findBestIndividualInResults results
+  print result
+  Utils.saveResult result outputDirectory
   endComputing <- System.Clock.getTime System.Clock.Monotonic
   putStrLn "\nProcessing time:"
   Formatting.fprint Formatting.Clock.timeSpecs startComputing endComputing

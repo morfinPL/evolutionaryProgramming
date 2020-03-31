@@ -245,8 +245,17 @@ findBestIndividualInIteration iteration =
   , snd iteration
   )
 
+
 findBestIndividualInResults
   :: Ord a => [(([[[Bool]]], [[a]]), Int)] -> ([a], Int)
 findBestIndividualInResults results = do
   let bests = map findBestIndividualInIteration results
   Data.List.minimumBy (\x y -> compare (last (fst x)) (last (fst y))) bests
+
+
+saveResult :: (Show a) => ([a], Int) -> String -> IO ()
+saveResult result outputDirectory = do
+  let strings = map (\x -> show x ++ " ") (fst result)
+  System.Directory.createDirectoryIfMissing True (outputDirectory ++ "\\txt")
+  System.IO.writeFile (outputDirectory ++ "\\txt\\result.txt")
+                      (concat strings ++ show (snd result))
