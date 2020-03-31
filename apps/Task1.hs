@@ -1,22 +1,9 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Task1 where
 
 import qualified Control.Monad                  ( mapM_
                                                 , when
                                                 )
-import qualified Data.Either                    ( fromRight )
-import qualified Data.Ini.Config                ( IniParser
-                                                , section
-                                                , fieldOf
-                                                , number
-                                                , flag
-                                                , string
-                                                , parseIniFile
-                                                )
 import qualified Data.List                      ( length )
-import qualified Data.Ratio                     ( (%) )
-import qualified Data.Text                      ( pack )
 import qualified Formatting                     ( fprint )
 import qualified Formatting.Clock               ( timeSpecs )
 import qualified System.Clock                   ( getTime
@@ -29,6 +16,7 @@ import qualified System.Directory               ( doesDirectoryExist
 import qualified System.Random.Mersenne.Pure64  ( newPureMT )
 
 import qualified Coding
+import qualified Configs
 import qualified Crossovers
 import qualified Evolutionary
 import qualified Mutations
@@ -49,8 +37,9 @@ main = do
         then head arguments
         else "config\\Task1\\config.txt"
   let dimensions = 2
-  config <- getConfig configPath
-  let objectiveFunction = Objectives.parseObjectiveFunction (function config)
+  config <- Configs.loadTask1Config configPath
+  let objectiveFunction =
+        Objectives.parseObjectiveFunction (Configs.function config)
   let functorValue                 = Objectives.functor objectiveFunction
   let objectiveFunctionStringValue = Objectives.string objectiveFunction
   let rangeXValue                  = Objectives.rangeX objectiveFunction
@@ -58,29 +47,32 @@ main = do
   let isoPointsValue               = Objectives.isoPoints objectiveFunction
   let groundLevelValue             = Objectives.groundLevel objectiveFunction
   generator <- System.Random.Mersenne.Pure64.newPureMT
-  let encoding = if sga config then id else Coding.grayCoding
-  let decoding = if sga config then id else Coding.grayDecoding
-  let selection = if sga config
+  let encoding = if Configs.sga config then id else Coding.grayCoding
+  let decoding = if Configs.sga config then id else Coding.grayDecoding
+  let selection = if Configs.sga config
         then Selections.roulette generator
         else Selections.champion generator
-  let mutation = if sga config
-        then Mutations.flipBit generator (mutationProbability config)
-        else Mutations.reverseSequence generator (mutationProbability config)
-  let crossover = if sga config
-        then Crossovers.onePoint generator (crossoverProbability config)
-        else Crossovers.randomPattern generator (crossoverProbability config)
-  let outputDirectory = outputDir config
+  let mutation = if Configs.sga config
+        then Mutations.flipBit generator (Configs.mutationProbability config)
+        else Mutations.reverseSequence generator
+                                       (Configs.mutationProbability config)
+  let crossover = if Configs.sga config
+        then Crossovers.onePoint generator (Configs.crossoverProbability config)
+        else Crossovers.randomPattern generator
+                                      (Configs.crossoverProbability config)
+  let outputDirectory = Configs.outputDir config
   let computePoints =
         Utils.computePoints functorValue rangeXValue rangeYValue decoding
   exists <- System.Directory.doesDirectoryExist outputDirectory
   Control.Monad.when
     exists
     (System.Directory.removeDirectoryRecursive outputDirectory)
-  let population = Evolutionary.generatePopulation generator
-                                                   (populationSize config)
-                                                   dimensions
-                                                   (features config)
-                                                   encoding
+  let population = Evolutionary.generatePopulation
+        generator
+        (Configs.populationSize config)
+        dimensions
+        (Configs.features config)
+        encoding
   let computedPoints = Utils.computePoints functorValue
                                            rangeXValue
                                            rangeYValue
@@ -112,7 +104,7 @@ main = do
                                                     crossover
                                                     computePoints
   startComputing <- System.Clock.getTime System.Clock.Monotonic
-  let results = take (iterations config)
+  let results = take (Configs.iterations config)
                      (iterate iterateFunction (population, computedPoints))
   putStrLn "Result:"
   print (head (Utils.sortByLastValue (snd (last results))))
@@ -122,7 +114,7 @@ main = do
   putStrLn ""
   putStrLn "Saving output started!"
   startSaving <- System.Clock.getTime System.Clock.Monotonic
-  let resultsWithIndexes = zip results [1, 2 .. (iterations config)]
+  let resultsWithIndexes = zip results [1, 2 .. (Configs.iterations config)]
   Control.Monad.mapM_
     (helper objectiveFunctionStringValue
             isoPointsValue
@@ -170,59 +162,3 @@ helper objectiveFunctionStringValue isoPointsValue groundLevelValue rangeXValue 
                (snd x)
                outputDirectory
                (snd (fst x))
-
-data Config = Config
-  { outputDir :: String
-  ,function :: String
-  , populationSize :: Int
-  , features :: Int
-  , iterations :: Int
-  , mutationProbability :: Rational
-  , crossoverProbability :: Rational
-  , sga :: Bool
-  } deriving (Eq, Show)
-
-parseConfig :: Data.Ini.Config.IniParser Config
-parseConfig = Data.Ini.Config.section "Task1" $ do
-  outputDir      <- Data.Ini.Config.fieldOf "outputDir" Data.Ini.Config.string
-  function       <- Data.Ini.Config.fieldOf "function" Data.Ini.Config.string
-  populationSize <- Data.Ini.Config.fieldOf "populationSize"
-                                            Data.Ini.Config.number
-  features <- Data.Ini.Config.fieldOf "features" Data.Ini.Config.number
-  iterations <- Data.Ini.Config.fieldOf "iterations" Data.Ini.Config.number
-  mutationProbability <- Data.Ini.Config.fieldOf "mutationProbability"
-                                                 Data.Ini.Config.number
-  crossoverProbability <- Data.Ini.Config.fieldOf "crossoverProbability"
-                                                  Data.Ini.Config.number
-  sga <- Data.Ini.Config.fieldOf "sga" Data.Ini.Config.flag
-  return
-    (Config outputDir
-            function
-            populationSize
-            features
-            iterations
-            mutationProbability
-            crossoverProbability
-            sga
-    )
-
-getConfig path = do
-  configFile <- readFile path
-  let parsingResult =
-        Data.Ini.Config.parseIniFile (Data.Text.pack configFile) parseConfig
-  case parsingResult of
-    Left message -> do
-      putStrLn message
-      putStrLn "Default config will be used!"
-    Right config -> putStrLn "Config successfully loaded!"
-  let defaultConfig = Config "output\\first"
-                             "first"
-                             1024
-                             32
-                             100
-                             (1 Data.Ratio.% 1000)
-                             (6 Data.Ratio.% 10)
-                             True
-  let config = Data.Either.fromRight defaultConfig parsingResult
-  print config
-  return config
