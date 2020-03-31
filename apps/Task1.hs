@@ -66,10 +66,10 @@ main = do
         else Crossovers.randomPattern generator
                                       (Configs.crossoverProbability config)
   let computePoints = Utils.computePoints functor rangeX rangeY decoding
-  exists <- System.Directory.doesDirectoryExist outputDirectory
 
+  exists <- System.Directory.doesDirectoryExist outputDirectory
   Control.Monad.when
-    exists
+    (exists && visualization)
     (System.Directory.removeDirectoryRecursive outputDirectory)
   let population = Evolutionary.generatePopulation
         generator
@@ -83,14 +83,17 @@ main = do
   putStrLn "Best initial guess:"
   print (head (Utils.sortByLastValue computedPoints))
 
-  Utils.plot2DObjectiveFunctionVisualizationFromTwoPerspectives
-    objectiveFunctionString
-    isoPoints
-    groundLevel
-    rangeX
-    rangeY
-    outputDirectory
-    ((population, computedPoints), 0)
+  Control.Monad.when
+    visualization
+    (Utils.plot2DObjectiveFunctionVisualizationFromTwoPerspectives
+      objectiveFunctionString
+      isoPoints
+      groundLevel
+      rangeX
+      rangeY
+      outputDirectory
+      ((population, computedPoints), 0)
+    )
 
   let nextGeneration = Evolutionary.nextGeneration decoding
                                                    selection
