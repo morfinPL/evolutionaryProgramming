@@ -3,7 +3,9 @@ module Utils where
 import qualified Control.Monad.Random           ( evalRand
                                                 , fromList
                                                 )
-import qualified Control.Monad                  ( when )
+import qualified Control.Monad                  ( when
+                                                , unless
+                                                )
 import qualified Data.Bool                      ( bool )
 import qualified Data.List                      ( length
                                                 , sortBy
@@ -22,19 +24,6 @@ weightedList :: System.Random.RandomGen g => g -> [(a, Rational)] -> [a]
 weightedList generator weights = Control.Monad.Random.evalRand m generator
   where m = sequence . repeat . Control.Monad.Random.fromList $ weights
 
-integerToDouble :: Int -> Integer -> Double
-integerToDouble power x = fromIntegral x / fromIntegral (2 ^ power - 1)
-
-individualToPoint :: ([Bool] -> [Bool]) -> [[Bool]] -> [Double]
-individualToPoint decoding individual = do
-  let dimensions      = length individual
-  let bits            = length (head individual)
-  let mappingFunction = integerToDouble bits
-  map (mappingFunction . bin2dec . decoding) individual
-  where bin2dec = foldl (\a -> (+) (2 * a) . Data.Bool.bool 0 1) 0
-
-convertPopulationToPoints :: ([Bool] -> [Bool]) -> [[[Bool]]] -> [[Double]]
-convertPopulationToPoints decoding = map (individualToPoint decoding)
 
 scalePoints :: Num a => (a, a) -> Int -> [[a]] -> [[a]]
 scalePoints range coordinate = map (scalePoint range coordinate)
@@ -44,12 +33,6 @@ scalePoints range coordinate = map (scalePoint range coordinate)
       ++ [(point !! coordinate) * (snd range - fst range) + fst range]
       ++ drop (coordinate + 1) point
 
-compute :: (Double -> Double -> Double) -> [Double] -> [Double]
-compute objectiveFunction point = do
-  let x = head point
-  let y = last point
-  let z = objectiveFunction x y
-  [x, y, z]
 
 computePoints
   :: (Double -> Double -> Double)
@@ -59,38 +42,44 @@ computePoints
   -> [[[Bool]]]
   -> [[Double]]
 computePoints objectiveFunction rangeX rangeY decoding population = do
-  let populationPoints = Utils.convertPopulationToPoints decoding population
+  let
+    populationPoints = convertPopulationToPoints decoding population     where
+      convertPopulationToPoints decoding = map (individualToPoint decoding)       where
+        individualToPoint decoding individual = do
+          let dimensions = length individual
+          let bits       = length (head individual)
+          let mappingFunction = integerToDouble bits               where
+                integerToDouble power x =
+                  fromIntegral x / fromIntegral (2 ^ power - 1)
+          map (mappingFunction . bin2dec . decoding) individual
+          where bin2dec = foldl (\a -> (+) (2 * a) . Data.Bool.bool 0 1) 0
   let populationScaledXPoints = Utils.scalePoints rangeX 0 populationPoints
   let populationScaledPoints =
         Utils.scalePoints rangeY 1 populationScaledXPoints
-  map (Utils.compute objectiveFunction) populationScaledPoints
+  map (compute objectiveFunction) populationScaledPoints where
+  compute objectiveFunction point = do
+    let x = head point
+    let y = last point
+    let z = objectiveFunction x y
+    [x, y, z]
 
 
-sortByObjectiveFunctionValue :: [[Double]] -> [[Double]]
-sortByObjectiveFunctionValue =
-  Data.List.sortBy (\xs ys -> compare (last xs) (last ys))
-
-
-codeToString :: [Bool] -> String
-codeToString = map boolToString where boolToString b = if b then '1' else '0'
-
-
-pointToString :: [Double] -> String
-pointToString point =
-  show (head point)
-    ++ " "
-    ++ show (point !! 1)
-    ++ " "
-    ++ show (point !! 2)
-    ++ "\n"
-
+sortByLastValue :: (Ord a) => [[a]] -> [[a]]
+sortByLastValue = Data.List.sortBy (\xs ys -> compare (last xs) (last ys))
 
 writePointsToFile :: String -> Int -> [[Double]] -> IO ()
 writePointsToFile outputDirectory iteration points = do
-  let sortedPoints = sortByObjectiveFunctionValue points
-  let bestValue    = last (head sortedPoints)
+  let sortedPoints = sortByLastValue points
+  let bestValue = last (head sortedPoints)
   let mean = sum (map last sortedPoints) / fromIntegral (length sortedPoints)
-  let strings      = map pointToString sortedPoints
+  let strings = map pointToString sortedPoints       where
+        pointToString point =
+          show (head point)
+            ++ " "
+            ++ show (point !! 1)
+            ++ " "
+            ++ show (point !! 2)
+            ++ "\n"
   System.Directory.createDirectoryIfMissing True (outputDirectory ++ "\\0_0")
   System.Directory.createDirectoryIfMissing True (outputDirectory ++ "\\75_45")
   System.Directory.createDirectoryIfMissing True (outputDirectory ++ "\\txt")
@@ -181,7 +170,7 @@ plot functionString samples planeLevel rangeX rangeY up iteration outputDirector
             ++ concat args
           ]
     System.Process.rawSystem "gnuplot" cmd
-    Control.Monad.when (not up) (deleteTempFiles outputDirectory iteration)
+    Control.Monad.unless up (deleteTempFiles outputDirectory iteration)
     return ()
 
 

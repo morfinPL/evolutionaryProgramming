@@ -87,7 +87,7 @@ main = do
                                            decoding
                                            population
   putStrLn "Best initial guess:"
-  print (head (Utils.sortByObjectiveFunctionValue computedPoints))
+  print (head (Utils.sortByLastValue computedPoints))
   Utils.plot objectiveFunctionStringValue
              isoPointsValue
              groundLevelValue
@@ -115,7 +115,7 @@ main = do
   let results = take (iterations config)
                      (iterate iterateFunction (population, computedPoints))
   putStrLn "Result:"
-  print (head (Utils.sortByObjectiveFunctionValue (snd (last results))))
+  print (head (Utils.sortByLastValue (snd (last results))))
   endComputing <- System.Clock.getTime System.Clock.Monotonic
   putStrLn "Processing time:"
   Formatting.fprint Formatting.Clock.timeSpecs startComputing endComputing
