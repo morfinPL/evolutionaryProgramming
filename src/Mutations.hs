@@ -8,22 +8,33 @@ import qualified System.Random                  ( RandomGen
 
 import qualified Utils
 
+flipBitIndividual :: System.Random.RandomGen g => g -> [[Bool]] -> [[Bool]]
+flipBitIndividual generator individual = do
+  let bits                   = length (head individual)
+  let concatenatedIndividual = concat individual
+  let index = head
+        (System.Random.randomRs
+          (0 :: Int, length concatenatedIndividual - 1 :: Int)
+          generator
+        )
+  Data.List.Split.chunksOf
+    bits
+    (  take index concatenatedIndividual
+    ++ [concatenatedIndividual !! index]
+    ++ drop (index + 1) concatenatedIndividual
+    )
+
 flipBit
   :: System.Random.RandomGen g => g -> Rational -> [[[Bool]]] -> [[[Bool]]]
 flipBit generator probability population = do
-  let dimensions               = length (head population)
-  let numberOfBitsPerDimension = length (head (head population))
-  let flattenPopulation        = concat (concat population)
-  let operations = take
-        (length flattenPopulation)
+  let mutationIndicator = take
+        (length population)
         (Utils.weightedList generator
-                            [(not, probability), (id, 1 - probability)]
+                            [(True, probability), (False, 1 - probability)]
         )
-  let tuples = zip operations flattenPopulation
-  Data.List.Split.chunksOf
-    dimensions
-    (Data.List.Split.chunksOf numberOfBitsPerDimension (map apply tuples))
-  where apply a = fst a (snd a)
+  zipWith (curry flipBitIf) population mutationIndicator where
+  flipBitIf tuple =
+    if snd tuple then flipBitIndividual generator (fst tuple) else fst tuple
 
 
 reverseIndividual :: System.Random.RandomGen g => g -> [[Bool]] -> [[Bool]]
