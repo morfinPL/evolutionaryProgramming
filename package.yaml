@@ -27,9 +27,9 @@ dependencies:
   - split
   - text
   - config-ini
-  - random-shuffle
-  - xorshift
+  - mersenne-random-pure64
   - MonadRandom
+  - random-shuffle
 
 library:
   source-dirs: src
@@ -46,7 +46,7 @@ executables:
       - -main-is Task1
     dependencies:
       - EP
-      - xorshift
       - config-ini
       - either
+      - mersenne-random-pure64
       - text

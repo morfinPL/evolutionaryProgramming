@@ -8,7 +8,9 @@ import qualified Data.Bool                      ( bool )
 import qualified Data.List                      ( length
                                                 , sortBy
                                                 )
-import qualified System.Directory               ( createDirectoryIfMissing )
+import qualified System.Directory               ( createDirectoryIfMissing
+                                                , removeFile
+                                                )
 import qualified System.IO                      ( writeFile
                                                 , appendFile
                                                 )
@@ -103,6 +105,13 @@ writePointsToFile outputDirectory iteration points = do
   System.IO.appendFile (outputDirectory ++ "\\txt\\mean.txt")
                        (show iteration ++ "\t" ++ show mean ++ "\n")
 
+deleteTempFiles :: String -> Int -> IO ()
+deleteTempFiles outputDirectory iteration = do
+  System.Directory.removeFile
+    (outputDirectory ++ "\\txt\\population" ++ show iteration ++ ".txt")
+  System.Directory.removeFile
+    (outputDirectory ++ "\\txt\\best" ++ show iteration ++ ".txt")
+
 
 plot
   :: String
@@ -172,6 +181,7 @@ plot functionString samples planeLevel rangeX rangeY up iteration outputDirector
             ++ concat args
           ]
     System.Process.rawSystem "gnuplot" cmd
+    Control.Monad.when (not up) (deleteTempFiles outputDirectory iteration)
     return ()
 
 
