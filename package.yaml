@@ -46,7 +46,4 @@ executables:
       - -main-is Task1
     dependencies:
       - EP
-      - config-ini
-      - either
       - mersenne-random-pure64
-      - text
