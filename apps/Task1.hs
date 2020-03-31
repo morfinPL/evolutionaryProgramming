@@ -124,12 +124,13 @@ main = do
     startSaving <- System.Clock.getTime System.Clock.Monotonic
     let resultsWithIndexes = zip results [1, 2 .. (Configs.iterations config)]
     Control.Monad.mapM_
-      (Utils.helper objectiveFunctionString
-                    isoPoints
-                    groundLevel
-                    rangeX
-                    rangeY
-                    outputDirectory
+      (Utils.plot2DObjectiveFunctionVisualizationFromTwoPerspectives
+        objectiveFunctionString
+        isoPoints
+        groundLevel
+        rangeX
+        rangeY
+        outputDirectory
       )
       resultsWithIndexes
     Utils.plot2D outputDirectory "best"
