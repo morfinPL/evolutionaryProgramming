@@ -205,3 +205,34 @@ plot2D outputDirectory title = do
         ]
   System.Process.rawSystem "gnuplot" cmd
   return ()
+
+
+helper
+  :: String
+  -> Integer
+  -> Double
+  -> (Double, Double)
+  -> (Double, Double)
+  -> String
+  -> (([[[Bool]]], [[Double]]), Int)
+  -> IO ()
+helper objectiveFunctionString isoPoints groundLevel rangeX rangeY outputDirectory x
+  = do
+    Utils.plot3D objectiveFunctionString
+                 isoPoints
+                 groundLevel
+                 rangeX
+                 rangeY
+                 True
+                 (snd x)
+                 outputDirectory
+                 (snd (fst x))
+    Utils.plot3D objectiveFunctionString
+                 isoPoints
+                 groundLevel
+                 rangeX
+                 rangeY
+                 False
+                 (snd x)
+                 outputDirectory
+                 (snd (fst x))
