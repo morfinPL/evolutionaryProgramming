@@ -19,6 +19,8 @@ import qualified System.IO                      ( writeFile
 import qualified System.Process                 ( rawSystem )
 import qualified System.Random                  ( RandomGen )
 
+import qualified Configs                        ( VisualizationMode(..) )
+
 
 weightedList :: System.Random.RandomGen g => g -> [(a, Rational)] -> [a]
 weightedList generator weights = Control.Monad.Random.evalRand m generator
@@ -173,6 +175,59 @@ plot3D functionString samples planeLevel rangeX rangeY up iteration outputDirect
     return ()
 
 
+plot3DInteractive
+  :: String
+  -> Integer
+  -> Double
+  -> (Double, Double)
+  -> (Double, Double)
+  -> Int
+  -> String
+  -> [[Double]]
+  -> IO ()
+plot3DInteractive functionString samples planeLevel rangeX rangeY iteration outputDirectory points
+  = do
+    writePointsToFile outputDirectory iteration points
+    let
+      args =
+        [ "set title 'Iteration " ++ show iteration ++ "';"
+        , "set grid;"
+        , "set pm3d;"
+        , "set palette rgb 33,13,10;"
+        , "set isosample " ++ show samples ++ ";"
+        , "set xyplane at " ++ show planeLevel ++ ";"
+        , "set xrange ["
+          ++ show (fst rangeX)
+          ++ ":"
+          ++ show (snd rangeX)
+          ++ "];"
+        , "set yrange ["
+          ++ show (fst rangeY)
+          ++ ":"
+          ++ show (snd rangeY)
+          ++ "];"
+        , "splot "
+          ++ functionString
+          ++ " title 'Objective Function' with lines lc rgb '#000000', "
+          ++ "'"
+          ++ outputDirectory
+          ++ "\\txt\\population"
+          ++ show iteration
+          ++ ".txt"
+          ++ "' using 1:2:3 title 'Population' with points pt 7 lc rgb '#FF3333', "
+        , "'"
+          ++ outputDirectory
+          ++ "\\txt\\best"
+          ++ show iteration
+          ++ ".txt"
+          ++ "' using 1:2:3 title 'Best individual' with points pt 7 lc rgb '#00FF00';"
+        ]
+    let cmd = ["-p", "-e", concat args]
+    System.Process.rawSystem "gnuplot" cmd
+    deleteTempFiles outputDirectory iteration
+    return ()
+
+
 plot2D :: String -> String -> IO ()
 plot2D outputDirectory title = do
   let
@@ -213,28 +268,38 @@ plot2DObjectiveFunctionVisualizationFromTwoPerspectives
   -> (Double, Double)
   -> (Double, Double)
   -> String
+  -> Configs.VisualizationMode
   -> (([[[Bool]]], [[Double]]), Int)
   -> IO ()
-plot2DObjectiveFunctionVisualizationFromTwoPerspectives objectiveFunctionString isoPoints groundLevel rangeX rangeY outputDirectory x
-  = do
-    Utils.plot3D objectiveFunctionString
-                 isoPoints
-                 groundLevel
-                 rangeX
-                 rangeY
-                 True
-                 (snd x)
-                 outputDirectory
-                 (snd (fst x))
-    Utils.plot3D objectiveFunctionString
-                 isoPoints
-                 groundLevel
-                 rangeX
-                 rangeY
-                 False
-                 (snd x)
-                 outputDirectory
-                 (snd (fst x))
+plot2DObjectiveFunctionVisualizationFromTwoPerspectives objectiveFunctionString isoPoints groundLevel rangeX rangeY outputDirectory visualizationMode x
+  = if visualizationMode == Configs.Interactive
+    then Utils.plot3DInteractive objectiveFunctionString
+                                 isoPoints
+                                 groundLevel
+                                 rangeX
+                                 rangeY
+                                 (snd x)
+                                 outputDirectory
+                                 (snd (fst x))
+    else do
+      Utils.plot3D objectiveFunctionString
+                   isoPoints
+                   groundLevel
+                   rangeX
+                   rangeY
+                   True
+                   (snd x)
+                   outputDirectory
+                   (snd (fst x))
+      Utils.plot3D objectiveFunctionString
+                   isoPoints
+                   groundLevel
+                   rangeX
+                   rangeY
+                   False
+                   (snd x)
+                   outputDirectory
+                   (snd (fst x))
 
 
 findBestIndividualInIteration

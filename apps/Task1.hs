@@ -2,6 +2,7 @@ module Task1 where
 
 import qualified Control.Monad                  ( mapM_
                                                 , when
+                                                , unless
                                                 )
 import qualified Formatting                     ( fprint )
 import qualified Formatting.Clock               ( timeSpecs )
@@ -69,7 +70,7 @@ main = do
 
   exists <- System.Directory.doesDirectoryExist outputDirectory
   Control.Monad.when
-    (exists && visualization)
+    exists
     (System.Directory.removeDirectoryRecursive outputDirectory)
 
   let population = Evolutionary.generatePopulation
@@ -86,8 +87,8 @@ main = do
     (fst (Utils.findBestIndividualInIteration ((population, computedPoints), 0))
     )
 
-  Control.Monad.when
-    visualization
+  Control.Monad.unless
+    (visualization == Configs.Result)
     (Utils.plot2DObjectiveFunctionVisualizationFromTwoPerspectives
       objectiveFunctionString
       isoPoints
@@ -95,6 +96,7 @@ main = do
       rangeX
       rangeY
       outputDirectory
+      visualization
       ((population, computedPoints), 0)
     )
 
@@ -120,7 +122,7 @@ main = do
   Formatting.fprint Formatting.Clock.timeSpecs startComputing endComputing
   putStrLn ""
 
-  Control.Monad.when visualization $ do
+  Control.Monad.unless (visualization == Configs.Result) $ do
     putStrLn "\nSaving output started!\n"
     startSaving <- System.Clock.getTime System.Clock.Monotonic
     Control.Monad.mapM_
@@ -131,6 +133,7 @@ main = do
         rangeX
         rangeY
         outputDirectory
+        visualization
       )
       results
     Utils.plot2D outputDirectory "best"

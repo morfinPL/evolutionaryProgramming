@@ -13,6 +13,33 @@ import qualified Data.Ini.Config                ( IniParser
                                                 )
 import qualified Data.Ratio                     ( (%) )
 import qualified Data.Text                      ( pack )
+import qualified Data.Maybe                     ( fromJust )
+import qualified Text.Syntax                    ( Syntax
+                                                , (<*)
+                                                , (<|>)
+                                                , text
+                                                , pure
+                                                )
+import qualified Text.Syntax.Parser.Naive       ( Parser(..) )
+import qualified Text.Syntax.Printer.Naive      ( print )
+
+data VisualizationMode = Result | Full | Interactive deriving (Eq, Ord)
+
+visualizationMode :: Text.Syntax.Syntax f => f VisualizationMode
+visualizationMode =
+  Text.Syntax.pure Result
+    Text.Syntax.<*  Text.Syntax.text "Result"
+    Text.Syntax.<|> Text.Syntax.pure Full
+    Text.Syntax.<*  Text.Syntax.text "Full"
+    Text.Syntax.<|> Text.Syntax.pure Interactive
+    Text.Syntax.<*  Text.Syntax.text "Interactive"
+
+runParser (Text.Syntax.Parser.Naive.Parser p) = p
+instance Read VisualizationMode where
+  readsPrec _ = runParser visualizationMode
+instance Show VisualizationMode where
+  show =
+    Data.Maybe.fromJust . Text.Syntax.Printer.Naive.print visualizationMode
 
 
 data Task1 = Task1
@@ -24,7 +51,7 @@ data Task1 = Task1
   , mutationProbability :: Rational
   , crossoverProbability :: Rational
   , sga :: Bool
-  , visualization :: Bool
+  , visualization :: VisualizationMode
   } deriving (Eq, Show)
 
 parseConfig :: Data.Ini.Config.IniParser Task1
@@ -40,7 +67,8 @@ parseConfig = Data.Ini.Config.section "Task1" $ do
   crossoverProbability <- Data.Ini.Config.fieldOf "crossoverProbability"
                                                   Data.Ini.Config.number
   sga           <- Data.Ini.Config.fieldOf "sga" Data.Ini.Config.flag
-  visualization <- Data.Ini.Config.fieldOf "visualization" Data.Ini.Config.flag
+  visualization <- Data.Ini.Config.fieldOf "visualization"
+                                           Data.Ini.Config.string
   return
     (Task1 outputDir
            function
@@ -50,7 +78,7 @@ parseConfig = Data.Ini.Config.section "Task1" $ do
            mutationProbability
            crossoverProbability
            sga
-           visualization
+           (read visualization :: VisualizationMode)
     )
 
 loadTask1Config path = do
@@ -70,7 +98,7 @@ loadTask1Config path = do
                             (1 Data.Ratio.% 1000)
                             (6 Data.Ratio.% 10)
                             True
-                            True
+                            Interactive
   let config = Data.Either.fromRight defaultConfig parsingResult
   print config
   return config
