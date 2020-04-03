@@ -39,10 +39,7 @@ executables:
     main: Task1.hs
     source-dirs: apps
     ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-      - -O3
+      - -O2
       - -main-is Task1
     dependencies:
       - EP
