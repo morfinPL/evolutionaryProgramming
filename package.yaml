@@ -1,8 +1,8 @@
 name: EP
 version: 1.0.0.0
-author: "***REMOVED***"
-maintainer: "***REMOVED***"
-copyright: "2020 ***REMOVED***"
+author: "morfinPL"
+maintainer: "pl.morfin.pl@gmail.com"
+copyright: "2020 morfinPL"
 
 extra-source-files:
   - README.md
